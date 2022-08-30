@@ -10,6 +10,7 @@ library(DT)
 # deployApp()
 
 source("helpers.R")
+source("functions.R")
 
 ui <- navbarPage("FishStat Trade Data",
         tabPanel("Home",
@@ -86,7 +87,8 @@ server <- function(input, output, session) {
                      filter(year == input$year_country) %>%
                      filter(reporting_country == input$country) %>%
                      filter(trade_flow == input$flow_country) %>%
-                     rename(z = value)
+                     rename(z = value) %>%
+                     mutate(z_formatted = addUnits(z))
                    )
   
   data_reporting <- reactive(edata %>% 
@@ -107,7 +109,8 @@ server <- function(input, output, session) {
                            filter(trade_flow == input$flow_country) %>%
                            group_by(reporting_country) %>%
                            summarise(value = sum(value)) %>%
-                           pull()
+                           pull() %>%
+                           addUnits()
                          )
   
   data_n <- reactive(edata %>%
@@ -203,9 +206,9 @@ server <- function(input, output, session) {
                     color = "#377eb8",
                     tooltip = list(pointFormat = paste('Country: {point.partner_country} <br>
                                                         Year: {point.year} <br>
-                                                        Value (USD): {point.z}'))) %>%
+                                                        Value (USD): {point.z_formatted}'))) %>%
       hc_title(text = paste0(input$country, ", ", tolower(input$flow_country), " of fish products", " (", input$year_country, ")")) %>%
-      hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", formatC(data_total(), format="f", big.mark = " ", digits = 0), ", number of partners: ", data_n())) %>%
+      hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_mapNavigation(enabled = T) %>%
       hc_legend(enabled = TRUE, 
                 layout = "vertical", 
