@@ -216,8 +216,10 @@ server <- function(input, output, session) {
       hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_mapNavigation(enabled = T) %>%
       hc_legend(enabled = TRUE, 
-                layout = "vertical", 
-                align = "bottom")
+                layout = "horizontal", 
+                align = "right",
+                verticalAlign = "bottom") %>%
+      hc_caption(text = "<center>Note: 'Other nei' refers to unspecified partners.</center>")
     
   )
   
@@ -237,7 +239,7 @@ server <- function(input, output, session) {
       hc_xAxis(title = list(text = "Partner country")) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow_country))),
                labels = list(format = "{value}%")) %>%
-      hc_caption(text = "Note: the 'Others' category groups all partner countries with a share of trade lower than 1%.")
+      hc_caption(text = "Note: the 'Others' category groups all partner countries with a share of trade lower than 1%, while 'Other nei' refers to unspecified partners.")
   })
    
 }
