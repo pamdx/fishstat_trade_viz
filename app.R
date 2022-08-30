@@ -88,7 +88,11 @@ server <- function(input, output, session) {
                      filter(reporting_country == input$country) %>%
                      filter(trade_flow == input$flow_country) %>%
                      rename(z = value) %>%
-                     mutate(z_formatted = addUnits(z))
+                     mutate(z_formatted = addUnits(z)) %>%
+                     group_by() %>%
+                     mutate(total = sum(z)) %>%
+                     ungroup() %>%
+                     mutate(share = sprintf("%0.1f%%", z/total*100))
                    )
   
   data_reporting <- reactive(edata %>% 
@@ -206,7 +210,8 @@ server <- function(input, output, session) {
                     color = "#377eb8",
                     tooltip = list(pointFormat = paste('Country: {point.partner_country} <br>
                                                         Year: {point.year} <br>
-                                                        Value (USD): {point.z_formatted}'))) %>%
+                                                        Value (USD): {point.z_formatted} <br>
+                                                        Share: {point.share}'))) %>%
       hc_title(text = paste0(input$country, ", ", tolower(input$flow_country), " of fish products", " (", input$year_country, ")")) %>%
       hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_mapNavigation(enabled = T) %>%
