@@ -201,7 +201,8 @@ server <- function(input, output, session) {
                     type = "mapbubble", 
                     name = if_else(input$flow_country == "Exports", "Origin of exports", "Destination of imports"), 
                     color = "#4daf4a",
-                    maxSize = "3%",
+                    minSize = "20",
+                    maxSize = "20",
                     tooltip = list(pointFormat = "Country: {point.reporting_country} <br>
                                                   Year: {point.year}")) %>%
       hc_add_series(data = data(), 
