@@ -1,2 +1,2 @@
 # Visualization of FishStat Trade data
-Interactive visualization of FAO's new fisheries and aquaculture trade data by partner country using R Shiny + Highcharter 
+Interactive visualization of FAO's new [Global Fish Trade by Partner Country](https://www.fao.org/fishery/statistics-query/en/trade_partners) data using R Shiny and the Highcharter package.
