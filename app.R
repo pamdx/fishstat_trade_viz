@@ -31,7 +31,13 @@ ui <- navbarPage("FishStat Trade Data",
             sidebarPanel(
               selectInput('flow_global','Trade flow', choices = unique(edata$trade_flow)), 
               selectInput('year_global','Year', choices = unique(edata$year)),
-              selectInput('country_highlight','Country highlight', choices = c("(None)", unique(edata$reporting_country)), selected = "China"),
+              radioButtons('radio_global', 'Filter by species group', choices=c('Yes', 'No'), selected = "No", inline = TRUE),
+              conditionalPanel(
+                condition = "input.radio_global == 'Yes'",
+                uiOutput('isscaap_group_global'),
+                helpText("Click ", a(href="https://www.fao.org/fishery/static/ASFIS/ISSCAAP.pdf", "here", target="_blank"), " for more information about the ISSCAAP classification.")
+                ),
+              selectInput('country_highlight','Country highlight (optional)', choices = c("(None)", unique(edata$reporting_country)), selected = "China"),
               width=2
             ),
             mainPanel(
@@ -48,6 +54,12 @@ ui <- navbarPage("FishStat Trade Data",
               selectInput('country','Country', choices = unique(edata$reporting_country)),
               selectInput('flow_country','Trade flow', choices = unique(edata$trade_flow)), 
               selectInput('year_country','Year', choices = unique(edata$year)),
+              radioButtons('radio_country', 'Filter by species group', choices=c('Yes', 'No'), selected = "No", inline = TRUE),
+              conditionalPanel(
+                condition = "input.radio_country == 'Yes'",
+                uiOutput('isscaap_group_country'),
+                helpText("Click ", a(href="https://www.fao.org/fishery/static/ASFIS/ISSCAAP.pdf", "here", target="_blank"), " for more information about the ISSCAAP classification.")
+              ),
               width=2
             ),
             mainPanel(
@@ -63,6 +75,14 @@ ui <- navbarPage("FishStat Trade Data",
 
 server <- function(input, output, session) {
   
+  output$isscaap_group_global<-renderUI({
+    selectInput('isscaap_group_global','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), multiple = TRUE)
+  })
+  
+  output$isscaap_group_country<-renderUI({
+    selectInput('isscaap_group_country','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), multiple = TRUE)
+  })
+  
   observe({
     updateSelectInput(session, "country", selected = sample(unique(edata$reporting_country), 1)) # Random country for each new session
   })
@@ -72,13 +92,15 @@ server <- function(input, output, session) {
   data_global <- reactive(edata %>%
                             filter(year == input$year_global) %>%
                             filter(trade_flow == input$flow_global) %>%
+                            {if (input$radio_global == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_global) else .} %>%
                             mutate(reporting_continent = ifelse(reporting_country %in% input$country_highlight, reporting_country, reporting_continent)) %>%
                             mutate(partner_continent = ifelse(partner_country %in% input$country_highlight, partner_country, partner_continent)) %>%
                             group_by(reporting_continent, partner_continent, unit, year, trade_flow) %>%
                             summarise(weight = sum(value)) %>%
                             ungroup() %>%
+                            mutate(weight_formatted = addUnits(weight)) %>%
                             rename(from = reporting_continent, to = partner_continent) %>%
-                            select(from, to , weight)
+                            select(from, to , weight, weight_formatted)
   )
   
   # Data transformations for country overview
@@ -87,11 +109,15 @@ server <- function(input, output, session) {
                      filter(year == input$year_country) %>%
                      filter(reporting_country == input$country) %>%
                      filter(trade_flow == input$flow_country) %>%
+                     {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
                      rename(z = value) %>%
-                     mutate(z_formatted = addUnits(z)) %>%
+                     group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -z)) %>%
+                     summarize(z = sum(z)) %>%
+                     ungroup() %>%
                      group_by() %>%
                      mutate(total = sum(z)) %>%
                      ungroup() %>%
+                     mutate(z_formatted = addUnits(z)) %>%
                      mutate(share = sprintf("%0.1f%%", z/total*100))
                    )
   
@@ -111,6 +137,7 @@ server <- function(input, output, session) {
                            filter(year == input$year_country) %>%
                            filter(reporting_country == input$country) %>%
                            filter(trade_flow == input$flow_country) %>%
+                           {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
                            group_by(reporting_country) %>%
                            summarise(value = sum(value)) %>%
                            pull() %>%
@@ -121,6 +148,9 @@ server <- function(input, output, session) {
                        filter(year == input$year_country) %>%
                        filter(reporting_country == input$country) %>%
                        filter(trade_flow == input$flow_country) %>%
+                       {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
+                       group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
+                       summarize(value = sum(value)) %>%
                        ungroup() %>%
                        summarise(n = n()) %>%
                        pull()
@@ -131,6 +161,10 @@ server <- function(input, output, session) {
       filter(year == input$year_country) %>%
       filter(reporting_country == input$country) %>%
       filter(trade_flow == input$flow_country) %>%
+      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
+      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
+      summarize(value = sum(value)) %>%
+      ungroup() %>%
       arrange(desc(value)) %>%
       group_by() %>%
       mutate(total = sum(value)) %>%
@@ -144,6 +178,10 @@ server <- function(input, output, session) {
       filter(year == input$year_country) %>%
       filter(reporting_country == input$country) %>%
       filter(trade_flow == input$flow_country) %>%
+      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
+      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
+      summarize(value = sum(value)) %>%
+      ungroup() %>%
       arrange(desc(value)) %>%
       group_by() %>%
       mutate(total = sum(value)) %>%
@@ -176,7 +214,7 @@ server <- function(input, output, session) {
             distance: 7
         }"),
         tooltip = list(nodeFormat = paste('{point.name}: <b>{point.sum:,.0f}</b><br/>'),
-                       pointFormat = paste('{point.fromNode.name}', if_else(input$flow_global == "Imports", "←", "→"),'{point.toNode.name}: <b>{point.weight:,.0f}</b><br/>'))) %>%
+                       pointFormat = paste('{point.fromNode.name}', if_else(input$flow_global == "Imports", "←", "→"),'{point.toNode.name}: <b>{point.weight_formatted}</b><br/>'))) %>%
       hc_caption(text = "Note: trade flows that start and end in the same continent (e.g. Europe → Europe) show the size of that continent's internal market (total trade among its countries). The 'Others' category refers to unspecified partners.")
   )
   
@@ -203,16 +241,12 @@ server <- function(input, output, session) {
                     color = "#4daf4a",
                     minSize = "20",
                     maxSize = "20",
-                    tooltip = list(pointFormat = "Country: {point.reporting_country} <br>
-                                                  Year: {point.year}")) %>%
+                    tooltip = list(pointFormat = "Country: {point.reporting_country}<br>Year: {point.year}")) %>%
       hc_add_series(data = data(), 
                     type = "mapbubble", 
                     name = if_else(input$flow_country == "Exports", "Destinations of exports", "Origin of imports"), 
                     color = "#377eb8",
-                    tooltip = list(pointFormat = paste('Country: {point.partner_country} <br>
-                                                        Year: {point.year} <br>
-                                                        Value (USD): {point.z_formatted} <br>
-                                                        Share: {point.share}'))) %>%
+                    tooltip = list(pointFormat = paste('Country: {point.partner_country}<br>Year: {point.year}<br>Value (USD): {point.z_formatted}<br>Share: {point.share}'))) %>%
       hc_title(text = paste0(input$country, ", ", tolower(input$flow_country), " of fish products", " (", input$year_country, ")")) %>%
       hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_mapNavigation(enabled = T) %>%

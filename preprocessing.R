@@ -55,10 +55,16 @@ saveRDS(trade_partner_raw, "trade_partner_raw.RDS")
 
 # Aggregate data at ISSCAAP group level
 
+isscaap_classif <- read_csv("https://raw.githubusercontent.com/openfigis/RefData/gh-pages/species/CL_FI_SPECIES_ISSCAAP_GROUP.csv") %>%
+  rename(commodity_isscaap_group = ISSCAAP_Code, name_isscaap_group = Name_En) %>%
+  select(commodity_isscaap_group, name_isscaap_group) %>%
+  mutate(conc_isscaap_group = paste(commodity_isscaap_group, "-", name_isscaap_group))
+
 trade_partner_ISSCAAP <- trade_partner_raw %>%
   group_by_at(vars(-c("commodity_code", "value", "commodity_name"))) %>%
   summarise(value = sum(value)) %>%
-  ungroup()
+  ungroup() %>%
+  left_join(isscaap_classif)
 
 saveRDS(trade_partner_ISSCAAP, "trade_partner_ISSCAAP.RDS")
 

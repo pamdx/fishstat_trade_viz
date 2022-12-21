@@ -18,6 +18,6 @@ cou_coordinates <- read_csv("https://raw.githubusercontent.com/google/dspl/maste
   add_row(ISO2 = "SS", latitude = 4.859363, longitude = 31.571251) %>% # Add South Sudan's coordinates
   add_row(ISO2 = "YU", latitude = 44.016521, longitude = 21.005859) # Add Yugoslavia using Serbia's coordinates
 
-edata <- readRDS("trade_partner_agg.RDS")
+edata <- readRDS("trade_partner_ISSCAAP.RDS")
 
 map <- readRDS("map.RDS")
