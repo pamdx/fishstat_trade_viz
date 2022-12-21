@@ -22,7 +22,8 @@ ui <- navbarPage("FishStat Trade Data",
               p("In the", strong("Country Overview"), "section, you can explore in details how the country of your choice trades with its partner countries around the world. The data is represented on a map, but you can also see more details about the data by clicking on the", em("Table"), "tab. Finally, see a chart of the selected country's main trading partners in the", em("Chart"), "tab."),
               p("We hope you enjoy this website. Click ", a(href="https://www.fao.org/fishery/en/statistics", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
               h2("Notes"),
-              p("Differences between figures given for total exports and total imports of any one commodity may be due to several factors, e.g. the time lapse between the dispatch of goods from the exporting country and their arrival in the importing country; the use of a different classification of the same product by different countries; or the fact that some countries supply trade data on general trade, while others give data on special trade.")
+              p("Differences between figures given for total exports and total imports of any one commodity may be due to several factors, e.g. the time lapse between the dispatch of goods from the exporting country and their arrival in the importing country; the use of a different classification of the same product by different countries; or the fact that some countries supply trade data on general trade, while others give data on special trade."),
+              p("Created by", a(href='https://pamdx.github.io/personal_site/index.html', 'Pierre Maudoux', target='_blank'), "(FAO). See the", a(href='https://github.com/pamdx/fishstat_trade_viz', 'source code', target='_blank'), "on GitHub.")
             )
          )
        ),
