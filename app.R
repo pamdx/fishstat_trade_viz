@@ -10,7 +10,6 @@ library(DT)
 # deployApp()
 
 source("helpers.R")
-source("functions.R")
 
 ui <- navbarPage("FishStat Trade Data",
         tabPanel("Home",
@@ -32,13 +31,13 @@ ui <- navbarPage("FishStat Trade Data",
             sidebarPanel(
               selectInput('flow_global','Trade flow', choices = unique(edata$trade_flow)), 
               selectInput('year_global','Year', choices = unique(edata$year)),
+              selectInput('country_highlight','Country highlight (optional)', choices = c("(None)", unique(edata$reporting_country)), selected = "China"),
               radioButtons('radio_global', 'Filter by species group', choices=c('Yes', 'No'), selected = "No", inline = TRUE),
               conditionalPanel(
                 condition = "input.radio_global == 'Yes'",
                 uiOutput('isscaap_group_global'),
                 helpText("Click ", a(href="https://www.fao.org/fishery/static/ASFIS/ISSCAAP.pdf", "here", target="_blank"), " for more information about the ISSCAAP classification.")
-                ),
-              selectInput('country_highlight','Country highlight (optional)', choices = c("(None)", unique(edata$reporting_country)), selected = "China"),
+              ),
               width=2
             ),
             mainPanel(
@@ -52,7 +51,7 @@ ui <- navbarPage("FishStat Trade Data",
         tabPanel("Country Overview",
           sidebarLayout(
             sidebarPanel(
-              selectInput('country','Country', choices = unique(edata$reporting_country)),
+              selectInput('country','Country', choices = unique(edata$reporting_country), selected = sample(unique(edata$reporting_country), 1)),
               selectInput('flow_country','Trade flow', choices = unique(edata$trade_flow)), 
               selectInput('year_country','Year', choices = unique(edata$year)),
               radioButtons('radio_country', 'Filter by species group', choices=c('Yes', 'No'), selected = "No", inline = TRUE),
@@ -76,16 +75,14 @@ ui <- navbarPage("FishStat Trade Data",
 
 server <- function(input, output, session) {
   
+  # Initialize conditional species filters
+  
   output$isscaap_group_global<-renderUI({
-    selectInput('isscaap_group_global','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), multiple = TRUE)
+    selectInput('isscaap_group_global','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), selected = sample(unique(edata$conc_isscaap_group), 1), multiple = FALSE)
   })
   
   output$isscaap_group_country<-renderUI({
-    selectInput('isscaap_group_country','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), multiple = TRUE)
-  })
-  
-  observe({
-    updateSelectInput(session, "country", selected = sample(unique(edata$reporting_country), 1)) # Random country for each new session
+    selectInput('isscaap_group_country','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), selected = sample(unique(edata$conc_isscaap_group), 1), multiple = FALSE)
   })
   
   # Data transformations for global overview
@@ -248,7 +245,7 @@ server <- function(input, output, session) {
                     name = if_else(input$flow_country == "Exports", "Destinations of exports", "Origin of imports"), 
                     color = "#377eb8",
                     tooltip = list(pointFormat = paste('Country: {point.partner_country}<br>Year: {point.year}<br>Value (USD): {point.z_formatted}<br>Share: {point.share}'))) %>%
-      hc_title(text = paste0(input$country, ", ", tolower(input$flow_country), " of fish products", " (", input$year_country, ")")) %>%
+      hc_title(text = paste0(input$country, ", ", tolower(input$flow_country),  " of ", ifelse(input$radio_country == 'No', "fishery and aquaculture products", tolower(edata[edata$conc_isscaap_group == input$isscaap_group_country,]$name_isscaap_group[[1]])), " (", input$year_country, ")")) %>%
       hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_mapNavigation(enabled = T) %>%
       hc_legend(enabled = TRUE, 
@@ -259,8 +256,23 @@ server <- function(input, output, session) {
     
   )
   
-  output$data_table <- DT::renderDataTable({
-    datatable(data_table(), colnames = c("Partner country", "Year", "Flow type", "Value", "Unit", "Share (%)")) %>%
+  output$data_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is download when using the buttons
+    datatable(data_table(),
+              extensions = 'Buttons',
+              options = list(
+                paging = TRUE,
+                searching = TRUE,
+                fixedColumns = TRUE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf'),
+                pageLength = 10, 
+                lengthMenu = c(10,50,100)
+              ),
+              class = "display",
+              caption = paste0(input$country, ", ", tolower(input$flow_country),  " of ", ifelse(input$radio_country == 'No', "fishery and aquaculture products", tolower(edata[edata$conc_isscaap_group == input$isscaap_group_country,]$name_isscaap_group[[1]])), " (", input$year_country, ")"), 
+              colnames = c("Partner country", "Year", "Flow type", "Value", "Unit", "Share (%)")) %>%
       formatRound(c("share"), 1) %>%
       formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 0)
   })
@@ -275,6 +287,8 @@ server <- function(input, output, session) {
       hc_xAxis(title = list(text = "Partner country")) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow_country))),
                labels = list(format = "{value}%")) %>%
+      hc_title(text = paste0(input$country, ", ", tolower(input$flow_country),  " of ", ifelse(input$radio_country == 'No', "fishery and aquaculture products", tolower(edata[edata$conc_isscaap_group == input$isscaap_group_country,]$name_isscaap_group[[1]])), " (", input$year_country, ")")) %>%
+      hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
       hc_caption(text = "Note: the 'Others' category groups all partner countries with a share of trade lower than 1%, while 'Other nei' refers to unspecified partners.")
   })
    
