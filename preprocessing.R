@@ -46,8 +46,8 @@ trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Sudan (form
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Sudan (former)"] <- "SD" # Fix lack of ISO2 for Sudan (former)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
-trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Channel Islands"] <- "CS" # Fix lack of ISO2 for Channel Islands (unofficial)
-trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Channel Islands"] <- "CS" # Fix lack of ISO2 for Channel Islands (unofficial)
+trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Channel Islands"] <- "CP" # Fix lack of ISO2 for Channel Islands (unofficial)
+trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Channel Islands"] <- "CP" # Fix lack of ISO2 for Channel Islands (unofficial)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Sint Maarten"] <- "SX" # Fix lack of ISO2 for Sint Maarten (unofficial)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Sint Maarten"] <- "SX" # Fix lack of ISO2 for Sint Maarten (unofficial)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Saint-Martin (French)"] <- "SF" # Fix lack of ISO2 for Saint-Martin (French) (unofficial)
@@ -66,7 +66,7 @@ cou_coordinates <- read_csv("https://raw.githubusercontent.com/google/dspl/maste
   add_row(ISO2 = "SS", latitude = 4.859363, longitude = 31.571251) %>% # Add South Sudan's coordinates
   add_row(ISO2 = "YU", latitude = 44.016521, longitude = 21.005859) %>% # Add Yugoslavia using Serbia's coordinates
   add_row(ISO2 = "ZZ", latitude = -6.165917, longitude = 39.202641) %>% # Add Zanzibar using its capital's coordinates
-  add_row(ISO2 = "CS", latitude = 49.354417, longitude = -2.372106) %>% # Add Channel Islands using an arbitrary point in the English Channel
+  add_row(ISO2 = "CP", latitude = 49.354417, longitude = -2.372106) %>% # Add Channel Islands using an arbitrary point in the English Channel
   add_row(ISO2 = "SX", latitude = 18.0237, longitude = -63.0458) %>% # Add Sint Maarten using its capital's coordinates
   add_row(ISO2 = "SF", latitude = 18.0731, longitude = -63.0822) %>% # Add Saint-Martin (French) using its capital's coordinates
   add_row(ISO2 = "SW", latitude = 17.897908, longitude = -62.850556) # Add Saint Barthélemy using its capital's coordinates

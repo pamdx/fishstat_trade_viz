@@ -16,7 +16,7 @@ ui <- navbarPage("FishStat Trade Data",
          fluidPage(
             mainPanel(
               h1("Welcome"),
-              p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/statistics-query/en/trade_partners", "Global Fish Trade by Partner Country", target="_blank"), "dataset."),
+              p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", "Global Fish Trade by Partner Country", target="_blank"), "dataset."),
               p("In the", strong("Global Overview"), "section, you will find a visualization of the intercontinental trade of fish products. Go ahead and use the", em("Country highlight"), "filter to see how your country trades with the rest of the world. The", em("Heatmap"), "tab displays this information as a heatmap."),
               p("In the", strong("Country Overview"), "section, you can explore in details how the country of your choice trades with its partner countries around the world. The data is represented on a map, but you can also see more details about the data by clicking on the", em("Table"), "tab. Finally, see a chart of the selected country's main trading partners in the", em("Chart"), "tab."),
               p("We hope you enjoy this website. Click ", a(href="https://www.fao.org/fishery/en/statistics", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
@@ -85,7 +85,7 @@ server <- function(input, output, session) {
     selectInput('isscaap_group_country','ISSCAAP Group', choices = unique(sort(edata$conc_isscaap_group)), selected = sample(unique(edata$conc_isscaap_group), 1), multiple = FALSE)
   })
   
-  # Data transformations for global overview
+  # Global overview
   
   data_global <- reactive(edata %>%
                             filter(year == input$year_global) %>%
@@ -101,7 +101,54 @@ server <- function(input, output, session) {
                             select(from, to , weight, weight_formatted)
   )
   
-  # Data transformations for country overview
+  output$dependencywheel <- renderHighchart(
+    highchart() %>%
+      hc_chart(type = 'dependencywheel') %>%
+      hc_add_series(
+        data = data_global(), 
+        name = paste(input$flow_global, "flows (USD)"),
+        dataLabels = JS("{
+            color: '#333',
+            textPath: {
+                enabled: true,
+                attributes: {
+                    dy: 5
+                }
+            },
+            distance: 7
+        }"),
+        tooltip = list(nodeFormat = paste('{point.name}: <b>{point.sum:,.0f}</b><br/>'),
+                       pointFormat = paste('{point.fromNode.name}', if_else(input$flow_global == "Imports", "←", "→"),'{point.toNode.name}: <b>{point.weight_formatted}</b><br/>'))) %>%
+      hc_caption(text = "Note: trade flows that start and end in the same continent (e.g. Europe → Europe) show the size of that continent's internal market (total trade among its countries). The 'Others' category refers to unspecified partners.") %>%
+      hc_exporting(enabled = TRUE, 
+                   buttons = list(
+                     contextButton = list(
+                       menuItems = hc_export_options
+                     )
+                   )
+      )
+  )
+  
+  output$heatmap <- renderHighchart({
+    hchart(data_global(),
+           "heatmap", 
+           hcaes(x = to, y = from, value = weight),
+           name = paste(input$flow_global, "flows (USD)"),
+           tooltip = list(pointFormat = paste('{point.from}', if_else(input$flow_global == "Imports", "←", "→"),'{point.to}: <b>{point.weight:,.0f}</b><br/>'))
+    ) %>%
+      hc_xAxis(title = list(text = "Partner continent"), opposite = TRUE) %>%
+      hc_yAxis(title = list(text = "Reporting continent"), reversed = TRUE) %>%
+      hc_caption(text = "Note: trade flows that start and end in the same continent (e.g. Europe → Europe) show the size of that continent's internal market (total trade among its countries). The 'Others' category refers to unspecified partners.") %>%
+      hc_exporting(enabled = TRUE, 
+                   buttons = list(
+                     contextButton = list(
+                       menuItems = hc_export_options
+                     )
+                   )
+      )
+  })
+  
+  # Country overview
   
   data <- reactive(edata %>% 
                      filter(year == input$year_country) %>%
@@ -153,83 +200,7 @@ server <- function(input, output, session) {
                        summarise(n = n()) %>%
                        pull()
   )
-  
-  data_table <- reactive(
-    edata %>%
-      filter(year == input$year_country) %>%
-      filter(reporting_country == input$country) %>%
-      filter(trade_flow == input$flow_country) %>%
-      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
-      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
-      summarize(value = sum(value)) %>%
-      ungroup() %>%
-      arrange(desc(value)) %>%
-      group_by() %>%
-      mutate(total = sum(value)) %>%
-      ungroup() %>%
-      mutate(share = value/total*100) %>%
-      select(partner_country, year, trade_flow, value, unit, share)
-    )
-  
-  data_chart <- reactive(
-    edata %>%
-      filter(year == input$year_country) %>%
-      filter(reporting_country == input$country) %>%
-      filter(trade_flow == input$flow_country) %>%
-      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
-      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
-      summarize(value = sum(value)) %>%
-      ungroup() %>%
-      arrange(desc(value)) %>%
-      group_by() %>%
-      mutate(total = sum(value)) %>%
-      ungroup() %>%
-      mutate(share = value/total*100) %>%
-      mutate(partner_country = ifelse(share < 1, "Others", partner_country)) %>%
-      mutate(bottom = ifelse(partner_country == "Others", 1, 0)) %>%
-      group_by(partner_country, bottom) %>%
-      summarize(share = sum(share)) %>%
-      ungroup() %>%
-      arrange(bottom, desc(share))
-  )
-  
-  # Outputs for global overview
-  
-  output$dependencywheel <- renderHighchart(
-    highchart() %>%
-      hc_chart(type = 'dependencywheel') %>%
-      hc_add_series(
-        data = data_global(), 
-        name = paste(input$flow_global, "flows (USD)"),
-        dataLabels = JS("{
-            color: '#333',
-            textPath: {
-                enabled: true,
-                attributes: {
-                    dy: 5
-                }
-            },
-            distance: 7
-        }"),
-        tooltip = list(nodeFormat = paste('{point.name}: <b>{point.sum:,.0f}</b><br/>'),
-                       pointFormat = paste('{point.fromNode.name}', if_else(input$flow_global == "Imports", "←", "→"),'{point.toNode.name}: <b>{point.weight_formatted}</b><br/>'))) %>%
-      hc_caption(text = "Note: trade flows that start and end in the same continent (e.g. Europe → Europe) show the size of that continent's internal market (total trade among its countries). The 'Others' category refers to unspecified partners.")
-  )
-  
-  output$heatmap <- renderHighchart({
-    hchart(data_global(),
-           "heatmap", 
-           hcaes(x = to, y = from, value = weight),
-           name = paste(input$flow_global, "flows (USD)"),
-           tooltip = list(pointFormat = paste('{point.from}', if_else(input$flow_global == "Imports", "←", "→"),'{point.to}: <b>{point.weight:,.0f}</b><br/>'))
-           ) %>%
-      hc_xAxis(title = list(text = "Partner continent"), opposite = TRUE) %>%
-      hc_yAxis(title = list(text = "Reporting continent"), reversed = TRUE) %>%
-      hc_caption(text = "Note: trade flows that start and end in the same continent (e.g. Europe → Europe) show the size of that continent's internal market (total trade among its countries). The 'Others' category refers to unspecified partners.")
-  })
-  
-  # Outputs for country overview
-  
+
   output$eqmap <- renderHighchart(
     highchart(type = "map") %>%
       hc_add_series(mapData = map, showInLegend = F) %>%
@@ -252,11 +223,78 @@ server <- function(input, output, session) {
                 layout = "horizontal", 
                 align = "right",
                 verticalAlign = "bottom") %>%
-      hc_caption(text = "<center>Note: 'Other nei' refers to unspecified partners.</center>")
-    
+      hc_caption(text = "<center>Note: 'Other nei' refers to unspecified partners.</center>") %>%
+      hc_exporting(enabled = TRUE, 
+                   buttons = list(
+                     contextButton = list(
+                       menuItems = hc_export_options
+                     )
+                   )
+      )
   )
   
-  output$data_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is download when using the buttons
+  data_chart <- reactive(
+    edata %>%
+      filter(year == input$year_country) %>%
+      filter(reporting_country == input$country) %>%
+      filter(trade_flow == input$flow_country) %>%
+      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
+      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
+      summarize(value = sum(value)) %>%
+      ungroup() %>%
+      arrange(desc(value)) %>%
+      group_by() %>%
+      mutate(total = sum(value)) %>%
+      ungroup() %>%
+      mutate(share = value/total*100) %>%
+      mutate(partner_country = ifelse(share < 1, "Others", partner_country)) %>%
+      mutate(bottom = ifelse(partner_country == "Others", 1, 0)) %>%
+      group_by(partner_country, bottom) %>%
+      summarize(share = sum(share)) %>%
+      ungroup() %>%
+      arrange(bottom, desc(share))
+  )
+    
+  output$chart <- renderHighchart({
+    hchart(data_chart(), 
+           type = "column", 
+           hcaes(x = partner_country, y = share), 
+           name = paste("Share of", tolower(input$flow_country)),
+           tooltip = list(pointFormat = "{series.name}: {point.share:.1f}%")
+    ) %>%
+      hc_xAxis(title = list(text = "Partner country")) %>%
+      hc_yAxis(title = list(text = paste("Share of", tolower(input$flow_country))),
+               labels = list(format = "{value}%")) %>%
+      hc_title(text = paste0(input$country, ", ", tolower(input$flow_country),  " of ", ifelse(input$radio_country == 'No', "fishery and aquaculture products", tolower(edata[edata$conc_isscaap_group == input$isscaap_group_country,]$name_isscaap_group[[1]])), " (", input$year_country, ")")) %>%
+      hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
+      hc_caption(text = "Note: the 'Others' category groups all partner countries with a share of trade lower than 1%, while 'Other nei' refers to unspecified partners.") %>%
+      hc_exporting(enabled = TRUE, 
+                   buttons = list(
+                     contextButton = list(
+                       menuItems = hc_export_options
+                     )
+                   )
+      )
+  })
+  
+  data_table <- reactive(
+    edata %>%
+      filter(year == input$year_country) %>%
+      filter(reporting_country == input$country) %>%
+      filter(trade_flow == input$flow_country) %>%
+      {if (input$radio_country == 'Yes') filter(., conc_isscaap_group %in% input$isscaap_group_country) else .} %>%
+      group_by_at(vars(-commodity_isscaap_group, -name_isscaap_group, -conc_isscaap_group, -value)) %>%
+      summarize(value = sum(value)) %>%
+      ungroup() %>%
+      arrange(desc(value)) %>%
+      group_by() %>%
+      mutate(total = sum(value)) %>%
+      ungroup() %>%
+      mutate(share = value/total*100) %>%
+      select(partner_country, year, trade_flow, value, unit, share)
+    )
+  
+  output$data_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is downloaded when using the buttons
     datatable(data_table(),
               extensions = 'Buttons',
               options = list(
@@ -276,22 +314,7 @@ server <- function(input, output, session) {
       formatRound(c("share"), 1) %>%
       formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 0)
   })
-  
-  output$chart <- renderHighchart({
-    hchart(data_chart(), 
-           type = "column", 
-           hcaes(x = partner_country, y = share), 
-           name = paste("Share of", tolower(input$flow_country)),
-           tooltip = list(pointFormat = "{series.name}: {point.share:.1f}%")
-           ) %>%
-      hc_xAxis(title = list(text = "Partner country")) %>%
-      hc_yAxis(title = list(text = paste("Share of", tolower(input$flow_country))),
-               labels = list(format = "{value}%")) %>%
-      hc_title(text = paste0(input$country, ", ", tolower(input$flow_country),  " of ", ifelse(input$radio_country == 'No', "fishery and aquaculture products", tolower(edata[edata$conc_isscaap_group == input$isscaap_group_country,]$name_isscaap_group[[1]])), " (", input$year_country, ")")) %>%
-      hc_subtitle(text = paste0('Total ', tolower(input$flow_country), ": ", "USD ", data_total(), ", number of partners: ", data_n())) %>%
-      hc_caption(text = "Note: the 'Others' category groups all partner countries with a share of trade lower than 1%, while 'Other nei' refers to unspecified partners.")
-  })
-   
+
 }
 
 # Run the application 

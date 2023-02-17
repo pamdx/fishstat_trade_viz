@@ -7,6 +7,8 @@ newtheme <- hc_theme_merge(
 
 options(highcharter.theme = newtheme)
 
+hc_export_options <- c("downloadPNG", "downloadJPEG", "downloadPDF", "downloadSVG")
+
 # Load data
 
 cou_coordinates <- readRDS("cou_coordinates.RDS")
