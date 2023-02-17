@@ -249,10 +249,11 @@ server <- function(input, output, session) {
       mutate(share = value/total*100) %>%
       mutate(partner_country = ifelse(share < 1, "Others", partner_country)) %>%
       mutate(bottom = ifelse(partner_country == "Others", 1, 0)) %>%
-      group_by(partner_country, bottom) %>%
-      summarize(share = sum(share)) %>%
+      group_by(partner_country, year, bottom) %>%
+      summarize(value = sum(value), share = sum(share)) %>%
       ungroup() %>%
-      arrange(bottom, desc(share))
+      arrange(bottom, desc(share)) %>%
+      mutate(value_formatted = addUnits(value), share_pretty = sprintf("%0.1f%%", share))
   )
     
   output$chart <- renderHighchart({
@@ -260,7 +261,7 @@ server <- function(input, output, session) {
            type = "column", 
            hcaes(x = partner_country, y = share), 
            name = paste("Share of", tolower(input$flow_country)),
-           tooltip = list(pointFormat = "{series.name}: {point.share:.1f}%")
+           tooltip = list(pointFormat = "Country: {point.partner_country}<br>Year: {point.year}<br>Production (tonnes): {point.value_formatted}<br>Share: {point.share_pretty}")
     ) %>%
       hc_xAxis(title = list(text = "Partner country")) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow_country))),
