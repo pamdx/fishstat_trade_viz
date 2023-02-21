@@ -11,7 +11,7 @@ library(DT)
 
 source("helpers.R")
 
-ui <- navbarPage("FishStat Trade Data",
+ui <- function(request){navbarPage("FishStat Trade Data",
         tabPanel("Home",
          fluidPage(
             mainPanel(
@@ -72,6 +72,7 @@ ui <- navbarPage("FishStat Trade Data",
           )
         )
       )
+}
 
 server <- function(input, output, session) {
   
@@ -316,7 +317,15 @@ server <- function(input, output, session) {
       formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 0)
   })
 
+  # Automatically bookmark every time an input changes
+  observe({
+    reactiveValuesToList(input)
+    session$doBookmark()
+  })
+  # Update the query string
+  onBookmarked(updateQueryString)
+  
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, enableBookmarking = "url")
