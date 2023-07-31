@@ -13,14 +13,13 @@ library(shinyfullscreen)
 source("helpers.R")
 
 ui <- function(request){navbarPage("FishStat Trade Data",
-       tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")), # Define background color using CSS to prevent black background when using fullscreen button
         tabPanel("Country Overview",
           sidebarLayout(
             sidebarPanel(
               selectInput('country','Reporting country', choices = c("Please select...", sort(unique(edata$reporting_country)))),
               selectInput('flow_country','Trade flow', choices = c("Please select...",sort(unique(edata$trade_flow)))),
-              selectInput('year_country','Year', choices = unique(edata$year)),
-              radioButtons('radio_country', 'Filter by species group', choices=c('Yes', 'No'), selected = "No", inline = TRUE),
+              selectInput('year_country','Year', choices = sort(unique(edata$year), decreasing = TRUE)),
+              radioButtons('radio_country', 'Filter by species group', choices = c('Yes', 'No'), selected = "No", inline = TRUE),
               conditionalPanel(
                 condition = "input.radio_country == 'Yes'",
                 uiOutput('isscaap_group_country'),

@@ -7,11 +7,11 @@ library(highcharter)
 # Get trade data by partner
 
 temp <- tempfile()
-download.file("https://www.fao.org/fishery/static/Data/FI_Trade_Partners_2022.1.0.zip", temp)
-data <- read_csv(unz(temp, "TRADE_PARTNERS_VALUE.csv"))
-countries <- read_csv(unz(temp, "CL_FI_COUNTRY_GROUPS.csv"), na = "") %>% # adding na = "" so that Namibia's ISO2 code isn't interpreted as a missing value
+download.file("https://www.fao.org/fishery/static/Data/FI_Trade_Partners_2023.1.0.zip", temp)
+data <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/TRADE_PARTNERS_VALUE.csv"))
+countries <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/CL_FI_COUNTRY_GROUPS.csv"), na = "") %>% # adding na = "" so that Namibia's ISO2 code isn't interpreted as a missing value
   select(UN_Code, ISO2_Code, Name_En, Continent_Group_En, GeoRegion_Group_En)
-commodities <- read_csv(unz(temp, "CL_FI_COMMODITY_ISSCFC.csv")) %>%
+commodities <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/CL_FI_COMMODITY_ISSCFC.csv")) %>%
   select(Code, ISSCAAP, Name_En)
 unlink(temp)
 
@@ -44,8 +44,8 @@ trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Czechoslova
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Czechoslovakia"] <- "CZ" # Fix lack of ISO2 for Czechoslovakia
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Sudan (former)"] <- "SD" # Fix lack of ISO2 for Sudan (former)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Sudan (former)"] <- "SD" # Fix lack of ISO2 for Sudan (former)
-trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
-trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
+trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "United Republic of Tanzania, Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
+trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "United Republic of Tanzania, Zanzibar"] <- "ZZ" # Fix lack of ISO2 for Zanzibar (unofficial)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Channel Islands"] <- "CP" # Fix lack of ISO2 for Channel Islands (unofficial)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Channel Islands"] <- "CP" # Fix lack of ISO2 for Channel Islands (unofficial)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Sint Maarten"] <- "SX" # Fix lack of ISO2 for Sint Maarten (unofficial)
