@@ -13,7 +13,10 @@ hc_export_options <- c("downloadPNG", "downloadJPEG", "downloadPDF", "downloadSV
 
 cou_coordinates <- readRDS("cou_coordinates.RDS")
 
-edata <- readRDS("trade_partner_ISSCAAP.RDS")
+data_agg <- readRDS("trade_partner_agg.RDS")
+data_yearbook <- readRDS("trade_partner_yearbookgroup.RDS")
+data_division <- readRDS("trade_partner_ISSCAAPdivision.RDS")
+data_group <- readRDS("trade_partner_ISSCAAPgroup.RDS")
 
 map <- readRDS("map.RDS")
 
