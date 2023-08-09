@@ -13,7 +13,7 @@ library(shinyfullscreen)
 source("helpers.R")
 
 ui <- function(request){navbarPage("FishStat Trade Data",
-        tabPanel("Country Overview",
+         tabPanel("Data Explorer",
           sidebarLayout(
             sidebarPanel(
               selectInput('country','Reporting country', choices = c("Please select...", sort(unique(data_agg$reporting_country)))),
@@ -28,19 +28,22 @@ ui <- function(request){navbarPage("FishStat Trade Data",
               conditionalPanel(
                 condition = "input.species_choice == 'ISSCAAP Division'",
                 uiOutput('isscaap_division'),
-                helpText("Click ", a(href="https://www.fao.org/fishery/static/ASFIS/ISSCAAP.pdf", "here", target="_blank"), " for more information about the ISSCAAP classification.")
+                helpText("Click ", a(href = "https://www.fao.org/fishery/en/collection/asfis/en", "here", target = "_blank"), " for more information about the ISSCAAP classification.")
               ),
               conditionalPanel(
                 condition = "input.species_choice == 'ISSCAAP Group'",
                 uiOutput('isscaap_group'),
-                helpText("Click ", a(href="https://www.fao.org/fishery/static/ASFIS/ISSCAAP.pdf", "here", target="_blank"), " for more information about the ISSCAAP classification.")
+                helpText("Click ", a(href = "https://www.fao.org/fishery/en/collection/asfis/en", "here", target = "_blank"), " for more information about the ISSCAAP classification.")
               ),
               
               hr(),
+              fullscreen_button("full_screen", label = "Fullscreen On/Off", icon = shiny::icon("expand", lib = "font-awesome"), target = NULL),
+              br(),
+              br(),
               bookmarkButton(label = "Share this view", icon = shiny::icon("share-alt", lib = "font-awesome")),
               br(),
               br(),
-              img(src="https://www.fao.org/images/corporatelibraries/fao-logo/fao-logo-en.svg?sfvrsn=f64522b4_33", width = "100%"),
+              img(src="fao-logo-en.svg", width = "100%"),
               width=2
             ),
             mainPanel(
@@ -52,11 +55,31 @@ ui <- function(request){navbarPage("FishStat Trade Data",
             )
           )
         ),
-       fixedPanel(
-         fullscreen_button("full_screen", label = "", icon = shiny::icon("expand", lib = "font-awesome"), target = NULL),
-         right = 326,
-         top = 79
-       )
+       tabPanel("Readme",
+                 fluidPage(
+                   mainPanel(
+                     h1("How to use this tool"),
+                     p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", "Global Fish Trade by Partner Country", target="_blank"), "dataset."),
+                     p("We hope you enjoy this application Click ", a(href="https://www.fao.org/fishery/en/fishstat", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
+                     h2("The Data Explorer"),
+                     p("Under the", em("Data Explorer"), "tab, you can explore in details how the country of your choice trades with partner countries around the world."),
+                     h3("Side panel"),
+                     p("The", em("side panel"), "located on the left of the user interface allows you to filter the data to visualize on the right side of the interface. Using these filters, one can display the imports/exports flows towards/from a given country for a specific year. The data can also be further filtered by species group (three species classifications are available). Finally, the two buttons on the bottom of the side panels allow the user to display the application in fullscreen and to share the current view with somebody else."), 
+                     tags$img(src = "side_panel.png"),
+                     h3("Map"),
+                     p("The data is first represented on a map under the", em("Map"), "tab. While the green bubble represents the reporting country, the blue bubbles represent the reporting country's trade flows with the rest of the world for the year selected in the side panel. Placing your cursor on individual bubbles will give you more information on a specific partner country's trade with the reporting country. You can zoom in or out of the map using the + and - buttons on the top left of the map. This is particularly useful to better explore data in areas of the world with a high density of countries. Finally, you can export the map as an image by clicking on the three lines on the top right of the map."), 
+                     tags$img(src = "map_illustration.png"),
+                     h3("Chart"),
+                     p("If you want to focus on the main partner countries for the reporting country you selected, you can display them as a bar chart ordered by their shares of trade under the", em("Chart"), "tab. Placing your cursor on individual bars will give you more information on a given partner country's trade with the reporting country. You can export the visual as an image by clicking on the three lines on the top right of the chart."), 
+                     tags$img(src = "chart_illustration.png"),
+                     h3("Table"),
+                     p("Finally, you can display a table listing the partner countries for the reporting country you selected in the", em("Table"), "tab. The data can be exported by clicking on any of the buttons on the top left of the table."),
+                     tags$img(src = "table_illustration.png"),
+                     h1("Notes"),
+                     p("Differences between figures given for total exports and total imports of any one commodity may be due to several factors, e.g. the time lapse between the dispatch of goods from the exporting country and their arrival in the importing country; the use of a different classification of the same product by different countries; or the fact that some countries supply trade data on general trade, while others give data on special trade.")
+                   )
+                 )
+        )
       )
 }
 
@@ -296,7 +319,7 @@ server <- function(input, output, session) {
                 ordering = TRUE,
                 dom = 'Bfrtip',
                 buttons = c('copy', 'csv', 'excel', 'pdf'),
-                pageLength = 10, 
+                pageLength = 15, 
                 lengthMenu = c(10,50,100)
               ),
               class = "display",

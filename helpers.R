@@ -24,10 +24,10 @@ map <- readRDS("map.RDS")
 
 addUnits <- function(n) {
   labels <- ifelse(n < 1000, round(n, 1),  # less than thousands
-                   ifelse(n < 1e6, paste0(round(n/1e3, 1), ' thousands'),  # in thousands
-                          ifelse(n < 1e9, paste0(round(n/1e6, 1), ' millions'),  # in millions
-                                 ifelse(n < 1e12, paste0(round(n/1e9, 1), ' billions'), # in billions
-                                        ifelse(n < 1e15, paste0(round(n/1e12, 1), ' trillions'), # in trillions
+                   ifelse(n < 1e6, paste0(round(n/1e3, 1), ' thousand'),  # in thousands
+                          ifelse(n < 1e9, paste0(round(n/1e6, 1), ' million'),  # in millions
+                                 ifelse(n < 1e12, paste0(round(n/1e9, 1), ' billion'), # in billions
+                                        ifelse(n < 1e15, paste0(round(n/1e12, 1), ' trillion'), # in trillions
                                                'too big!'
                                         )))))
   return(labels)
