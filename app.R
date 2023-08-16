@@ -6,6 +6,7 @@ library(tibble)
 library(readr)
 library(DT)
 library(shinyfullscreen)
+library(shinycssloaders)
 
 # library(rsconnect)
 # deployApp()
@@ -48,9 +49,18 @@ ui <- function(request){navbarPage("FishStat Trade Data",
             ),
             mainPanel(
               tabsetPanel(
-                tabPanel("Map", highchartOutput('map', height = "700px")),
-                tabPanel("Chart", highchartOutput("chart", height = "700px")),
-                tabPanel("Table", DT::dataTableOutput("data_table", height = "700px"))
+                tabPanel(
+                  "Map", 
+                  highchartOutput('map', height = "700px") %>% withSpinner()
+                  ),
+                tabPanel(
+                  "Chart", 
+                  highchartOutput("chart", height = "700px") %>% withSpinner()
+                  ),
+                tabPanel(
+                  "Table", 
+                  DT::dataTableOutput("data_table", height = "700px") %>% withSpinner()
+                  )
               )
             )
           )
@@ -60,7 +70,8 @@ ui <- function(request){navbarPage("FishStat Trade Data",
                    mainPanel(
                      h1("How to use this tool"),
                      p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", "Global Fish Trade by Partner Country", target="_blank"), "dataset."),
-                     p("We hope you enjoy this application Click ", a(href="https://www.fao.org/fishery/en/fishstat", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
+                     p("We hope you enjoy this application. Click ", a(href="https://www.fao.org/fishery/en/fishstat", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
+                     p("We encourage users to provide their feedback or ask their questions about this tool at", a(href="mailto:Fish-Statistics-Inquiries@fao.org", "Fish-Statistics-Inquiries@fao.org", target="_blank")),
                      h2("The Data Explorer"),
                      p("Under the", em("Data Explorer"), "tab, you can explore in details how the country of your choice trades with partner countries around the world."),
                      h3("Side panel"),
