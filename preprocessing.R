@@ -134,6 +134,6 @@ saveRDS(trade_partner_agg, "trade_partner_agg.RDS")
 
 # Download map for HC viz
 
-map <- download_map_data(url = "custom/world-continents.js", showinfo = FALSE, quiet = FALSE)
-
-saveRDS(map, "map.RDS")
+# map <- download_map_data(url = "custom/world-continents.js", showinfo = FALSE, quiet = FALSE)
+# 
+# saveRDS(map, "map.RDS")

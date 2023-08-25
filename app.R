@@ -13,7 +13,8 @@ library(shinycssloaders)
 
 source("helpers.R")
 
-ui <- function(request){navbarPage("FishStat Trade Data",
+ui <- function(request){
+        navbarPage(title = div(img(src = "fao-logo-blue-3lines-en.svg", id = "logo", height = "35px", style = "border-right: 1px solid grey; padding: 0 0.5rem; position: relative; margin:-15px 0px; display:right-align; "), "FishStat Trade Data"),
          tabPanel("Data Explorer",
           sidebarLayout(
             sidebarPanel(
@@ -42,9 +43,6 @@ ui <- function(request){navbarPage("FishStat Trade Data",
               br(),
               br(),
               bookmarkButton(label = "Share this view", icon = shiny::icon("share-alt", lib = "font-awesome")),
-              br(),
-              br(),
-              img(src="fao-logo-en.svg", width = "100%"),
               width=2
             ),
             mainPanel(
@@ -63,7 +61,13 @@ ui <- function(request){navbarPage("FishStat Trade Data",
                   )
               )
             )
-          )
+          ),
+          
+          hr(),
+          div(
+            class = "footer",
+            includeHTML("footer.html")
+          ),
         ),
        tabPanel("Readme",
                  fluidPage(
@@ -225,7 +229,24 @@ server <- function(input, output, session) {
                      contextButton = list(
                        menuItems = hc_export_options
                      )
-                   )
+                   ),
+                   chartOptions = list(
+                     chart = list(
+                       backgroundColor = "#FFFFFF"
+                     )
+                   ),
+                   sourceWidth = 1920,
+                   sourceHeight = 1080,
+                   filename = 
+                     if (input$species_choice == 'Yearbook/SOFIA Selection') {
+                       paste0("(Map) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
+                     } else if (input$species_choice == 'ISSCAAP Division') {
+                       paste0("(Map) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), " (", input$year, ")")
+                     } else if (input$species_choice == 'ISSCAAP Group') {
+                       paste0("(Map) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), " (", input$year, ")")
+                     } else {
+                       paste0("(Map) ", input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products (", input$year, ")")
+                     }
       )
   })
   
@@ -268,9 +289,10 @@ server <- function(input, output, session) {
            name = paste("Share of", tolower(input$flow)),
            tooltip = list(pointFormat = "Partner country: {point.partner_country}<br>Year: {point.year}<br>Value (USD): {point.value_formatted}<br>Share: {point.share_pretty}")
     ) %>%
-      hc_xAxis(title = list(text = "Partner country")) %>%
+      hc_xAxis(title = list(text = NULL)) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow))),
-               labels = list(format = "{value}%")) %>%
+               labels = list(format = "{value}%"),
+               ceiling = 100) %>%
       hc_title(text = 
                  if (input$species_choice == 'Yearbook/SOFIA Selection') {
                    paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
@@ -289,7 +311,24 @@ server <- function(input, output, session) {
                      contextButton = list(
                        menuItems = hc_export_options
                      )
-                   )
+                   ),
+                   chartOptions = list(
+                     chart = list(
+                       backgroundColor = "#FFFFFF"
+                     )
+                   ),
+                   # sourceWidth = 1920,
+                   # sourceHeight = 1080,
+                   filename = 
+                     if (input$species_choice == 'Yearbook/SOFIA Selection') {
+                       paste0("(Chart) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
+                     } else if (input$species_choice == 'ISSCAAP Division') {
+                       paste0("(Chart) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), " (", input$year, ")")
+                     } else if (input$species_choice == 'ISSCAAP Group') {
+                       paste0("(Chart) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), " (", input$year, ")")
+                     } else {
+                       paste0("(Chart) ", input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products (", input$year, ")")
+                     }
       )
   })
   
@@ -329,7 +368,47 @@ server <- function(input, output, session) {
                 autoWidth = FALSE,
                 ordering = TRUE,
                 dom = 'Bfrtip',
-                buttons = c('copy', 'csv', 'excel', 'pdf'),
+                buttons = list('copy', list(
+                  extend = 'collection',
+                  buttons = list(
+                    list(extend = 'csv', 
+                         filename =
+                           if (input$species_choice == 'Yearbook/SOFIA Selection') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Division') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Group') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), " (", input$year, ")")
+                           } else {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products (", input$year, ")")
+                           }
+                           ),
+                    list(extend = 'excel', 
+                         filename =
+                           if (input$species_choice == 'Yearbook/SOFIA Selection') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Division') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Group') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), " (", input$year, ")")
+                           } else {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products (", input$year, ")")
+                           }
+                           ),
+                    list(extend = 'pdf', 
+                         filename =
+                           if (input$species_choice == 'Yearbook/SOFIA Selection') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Division') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), " (", input$year, ")")
+                           } else if (input$species_choice == 'ISSCAAP Group') {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), " (", input$year, ")")
+                           } else {
+                             paste0("(Table) ", input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products (", input$year, ")")
+                           }
+                           )),
+                  text = 'Download'
+                )),
                 pageLength = 15, 
                 lengthMenu = c(10,50,100)
               ),
