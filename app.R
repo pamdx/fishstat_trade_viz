@@ -14,7 +14,7 @@ library(shinycssloaders)
 source("helpers.R")
 
 ui <- function(request){
-        navbarPage(title = div(img(src = "fao-logo-blue-3lines-en.svg", id = "logo", height = "35px", style = "border-right: 1px solid grey; padding: 0 0.5rem; position: relative; margin:-15px 0px; display:right-align; "), "FishStat Trade Data"),
+        navbarPage(title = a(href = "https://www.fao.org/fishery/en/fishstat", target = "_blank", style="text-decoration:none;color:inherit", div(img(src = "fao-logo-blue-3lines-en.svg", id = "logo", height = "35px", style = "border-right: 1px solid grey; padding: 0 0.5rem; position: relative; margin:-15px 0px; display:right-align; "), "FishStat Trade Data")),
          tabPanel("Data Explorer",
           sidebarLayout(
             sidebarPanel(

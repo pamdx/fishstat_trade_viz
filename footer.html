@@ -1,46 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<style>
-footer {
-  max-width: 83.333%;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your App</title>
+    <style>
+        /* Footer styles */
+        footer {
+            display: flex;
+            justify-content: space-between; /* Distribute items evenly along the horizontal axis */
+            align-items: center; /* Center items vertically */
+            padding: 10px 20px; /* Add padding for spacing */
+        }
 
-ul.horizontal-list li {
-  display: inline-block;
-  border-right: 1px solid grey;
-  padding: 0 0.5rem;
-}
-</style>
+        /* Add vertical bar after each list item except the last one */
+        ul.footer-list {
+            list-style: none;
+            margin: 0; /* Remove margin to prevent extra space */
+            padding: 0;
+        }
+
+        ul.footer-list li {
+            display: inline;
+        }
+
+        ul.footer-list li:not(:last-child)::after {
+            content: " | ";
+        }
+
+        /* Copyright link styles */
+        .copyright-link {
+            color: grey;
+        }
+    </style>
 </head>
 <body>
-
-<footer class="footer">
-      <div class="row col-lg-12">
-        <div class="col-lg-11">
-          <ul class="horizontal-list">
-            <li>
-              <a href="mailto:Fish-Statistics-Inquiries@fao.org">Contact us</a>
-            </li>
-            <li>
-              <a href="https://www.fao.org/contact-us/terms/en/" target="_blank">Terms and Conditions</a>
-            </li>
-            <li>
-              <a href="https://www.fao.org/contact-us/scam-alert/en/" target="_blank">Scam Alert</a>
-            </li>
-            <li>
-              <a href="https://www.fao.org/aud/69204/en/" target="_blank">Report Misconduct</a>
-            </li>
-            <li>
-              <a href="https://www.fao.org/contact-us/data-protection-and-privacy/en/" target="_blank">Data Protection and Privacy link</a>
-            </li>
-          </ul>
-        </div>
-        <div class="col-lg-1">
-          <a href="https://www.fao.org/home/en" style="color: grey" target="_blank">© FAO&nbsp;2023</a>
-        </div>
-      </div>
+    <footer>
+        <ul class="footer-list">
+            <li><a href="mailto:Fish-Statistics-Inquiries@fao.org">Contact us</a></li>
+            <li><a href="https://www.fao.org/contact-us/terms/en/" target="_blank">Terms and Conditions</a></li>
+            <li><a href="https://www.fao.org/contact-us/scam-alert/en/" target="_blank">Scam Alert</a></li>
+            <li><a href="https://www.fao.org/aud/69204/en/" target="_blank">Report Misconduct</a></li>
+            <li><a href="https://www.fao.org/contact-us/data-protection-and-privacy/en/" target="_blank">Data Protection and Privacy link</a></li>
+        </ul>
+        <a href="https://www.fao.org/home/en" class="copyright-link" target="_blank">© FAO&nbsp;2023</a>
     </footer>
-
 </body>
 </html>
