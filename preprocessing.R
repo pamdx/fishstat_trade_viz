@@ -38,6 +38,11 @@ trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Other nei"]
 trade_partner_raw$partner_continent[is.na(trade_partner_raw$partner_continent)] <- "Others"
 trade_partner_raw$partner_region[is.na(trade_partner_raw$partner_region)] <- "Others"
 
+# Add "China, " in front of the name for Taiwan
+
+trade_partner_raw$reporting_country[trade_partner_raw$reporting_country == "Taiwan Province of China"] <- "China, Taiwan Province of China"
+trade_partner_raw$partner_country[trade_partner_raw$partner_country == "Taiwan Province of China"] <- "China, Taiwan Province of China"
+
 # Join geographical coordinates
 
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Czechoslovakia"] <- "CZ" # Fix lack of ISO2 for Czechoslovakia
