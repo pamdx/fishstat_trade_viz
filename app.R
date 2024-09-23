@@ -8,9 +8,6 @@ library(DT)
 library(shinyfullscreen)
 library(shinycssloaders)
 
-# library(rsconnect)
-# deployApp()
-
 source("helpers.R")
 
 ui <- function(request){
@@ -24,6 +21,7 @@ ui <- function(request){
                                     selectInput('country','Country or area', choices = c("Please select...", sort(unique(data_agg$reporting_country)))),
                                     selectInput('flow','Trade flow', choices = c("Please select...",sort(unique(data_agg$trade_flow)))),
                                     selectInput('year','Year', choices = sort(unique(data_agg$year), decreasing = TRUE)),
+                                    selectInput('unit', 'Unit', choices = sort(unique(data_agg$unit), decreasing = TRUE)),
                                     selectInput('classification_choice', 'Filter by species group', choices = c('Disabled', 'Yearbook/SOFIA Selection', 'ISSCAAP Division', 'ISSCAAP Group'), selected = "Disabled"),
                                     conditionalPanel(
                                       condition = "input.classification_choice == 'Yearbook/SOFIA Selection'",
@@ -52,15 +50,15 @@ ui <- function(request){
                                     tabsetPanel(
                                       tabPanel(
                                         "Map", 
-                                        highchartOutput('countrymap', height = "700px") %>% withSpinner()
+                                        highchartOutput('countrymap', height = "850px") %>% withSpinner()
                                       ),
                                       tabPanel(
                                         "Chart", 
-                                        highchartOutput("chart", height = "700px") %>% withSpinner()
+                                        highchartOutput("chart", height = "850px") %>% withSpinner()
                                       ),
                                       tabPanel(
                                         "Table", 
-                                        DT::dataTableOutput("data_table", height = "700px") %>% withSpinner()
+                                        DT::dataTableOutput("data_table", height = "850px") %>% withSpinner()
                                       )
                                     )
                                   )
@@ -76,25 +74,25 @@ ui <- function(request){
                                 fluidPage(
                                   mainPanel(
                                     h1("How to use this tool"),
-                                    p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", "Global Fish Trade by Partner Country", target="_blank"), "dataset."),
+                                    p("This website features interactive visualizations to explore FAO's", a(href="https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", "Global aquatic trade - By partner country", target="_blank"), "dataset."),
                                     p("We hope you enjoy this application. Click ", a(href="https://www.fao.org/fishery/en/fishstat", "here", target="_blank"), "if you want to learn more about FAO's Fisheries and Aquaculture statistics."),
-                                    p("We encourage users to provide their feedback or ask their questions about this tool at", a(href="mailto:Fish-Statistics-Inquiries@fao.org", "Fish-Statistics-Inquiries@fao.org", target="_blank")),
+                                    p("We encourage users to provide their feedback or ask their questions about this tool at", a(href="mailto:Fish-Statistics-Inquiries@fao.org", "Fish-Statistics-Inquiries@fao.org", target="_blank", .noWS = c('after')), "."),
                                     h2("The Data Explorer"),
-                                    p("Under the", em("Data Explorer"), "tab, you can explore in details how the country of your choice trades with partner countries around the world."),
+                                    p("Under the", em("Data Explorer"), "tab, you can explore in detail how the country or territory of your choice trades with partners around the world."),
                                     h3("Side panel"),
-                                    p("The", em("side panel"), "located on the left of the user interface allows you to filter the data to visualize on the right side of the interface. Using these filters, one can display the imports/exports flows towards/from a given country for a specific year. The data can also be further filtered by species group (three species classifications are available). Finally, the two buttons on the bottom of the side panels allow the user to display the application in fullscreen and to share the current view with somebody else."), 
+                                    p("The", em("side panel"), "located on the left of the user interface allows you to filter the data to visualize on the right side of the interface. Using these filters, one can display the imports/exports flows towards/from a given country or territory for a specific year. The data can also be further filtered by species group (three species classifications are available). Finally, the two buttons on the bottom of the side panels allow the user to display the application in full screen and to share the current view with somebody else."), 
                                     tags$img(src = "side_panel.png"),
                                     h3("Map"),
-                                    p("The data is first represented on a map under the", em("Map"), "tab. While the green bubble represents the reporting country, the blue bubbles represent the reporting country's trade flows with the rest of the world for the year selected in the side panel. Placing your cursor on individual bubbles will give you more information on a specific partner country's trade with the reporting country. You can zoom in or out of the map using the + and - buttons on the top left of the map. This is particularly useful to better explore data in areas of the world with a high density of countries. Finally, you can export the map as an image by clicking on the three lines on the top right of the map."), 
+                                    p("The data is first represented on a map under the", em("Map"), "tab. While the green bubble represents the reporting country/territory, the blue bubbles represent the reporting country/territory's trade flows with the rest of the world for the year selected in the side panel. Placing your cursor on individual bubbles will give you more information on a specific partner's trade with the reporting country/territory. You can zoom in or out of the map using the + and - buttons on the top left of the map. This is particularly useful to better explore data in areas of the world with a high density of countries. Finally, you can export the map as an image by clicking on the three lines on the top right of the map."), 
                                     tags$img(src = "map_illustration.png"),
                                     h3("Chart"),
-                                    p("If you want to focus on the main partner countries for the reporting country you selected, you can display them as a bar chart ordered by their shares of trade under the", em("Chart"), "tab. Placing your cursor on individual bars will give you more information on a given partner country's trade with the reporting country. You can export the visual as an image by clicking on the three lines on the top right of the chart."), 
+                                    p("If you want to focus on the main partners for the reporting country/territory you selected, you can display them as a bar chart ordered by their shares of trade under the", em("Chart"), "tab. Placing your cursor on individual bars will give you more information on a given partner's trade with the reporting country/territory. You can export the visual as an image by clicking on the three lines on the top right of the chart."), 
                                     tags$img(src = "chart_illustration.png"),
                                     h3("Table"),
-                                    p("Finally, you can display a table listing the partner countries for the reporting country you selected in the", em("Table"), "tab. The data can be exported by clicking on any of the buttons on the top left of the table."),
+                                    p("Finally, you can display a table listing the partners for the reporting country/territory you selected in the", em("Table"), "tab. The data can be exported by clicking on any of the buttons on the top left of the table."),
                                     tags$img(src = "table_illustration.png"),
                                     h1("Notes"),
-                                    p("Differences between figures given for total exports and total imports of any one commodity may be due to several factors, e.g. the time lapse between the dispatch of goods from the exporting country and their arrival in the importing country; the use of a different classification of the same product by different countries; or the fact that some countries supply trade data on general trade, while others give data on special trade.")
+                                    p("Differences between figures given for total exports and total imports of any one commodity may be due to several factors, e.g. the time lapse between the dispatch of goods from the exporting country/territory and their arrival in the importing country/territory; the use of a different classification of the same product by different countries/territories; or the fact that some countries/territories supply trade data on general trade, while others give data on special trade.")
                                   )
                                 )
                        )
@@ -130,20 +128,27 @@ server <- function(input, output, session) {
   # Initialize conditional species filters
   
   output$yearbook_selection <- renderUI({
-    selectInput('yearbook_selection','Yearbook/SOFIA Selection', choices = unique(sort(data_yearbook$name_yearbook_selection)), selected = 'Aquatic animals', multiple = FALSE)
+    selectInput('yearbook_selection','Yearbook/SOFIA Selection', 
+                choices = data_yearbook %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(name_yearbook_selection) %>% unique() %>% sort(), 
+                selected = 'Aquatic animals', 
+                multiple = FALSE)
   })
   
   output$isscaap_division <- renderUI({
-    selectInput('isscaap_division','ISSCAAP Division', choices = unique(sort(data_division$conc_isscaap_division)), multiple = FALSE)
+    selectInput('isscaap_division','ISSCAAP Division', 
+                choices = data_division %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(conc_isscaap_division) %>% unique() %>% sort(), 
+                multiple = FALSE)
   })
   
   output$isscaap_group <- renderUI({
-    selectInput('isscaap_group','ISSCAAP Group', choices = unique(sort(data_group$conc_isscaap_group)), multiple = FALSE)
+    selectInput('isscaap_group','ISSCAAP Group',
+                choices = data_group %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(conc_isscaap_group) %>% unique() %>% sort(), 
+                multiple = FALSE)
   })
   
   # Country overview
   
-  data <- reactive(switch(input$classification_choice, 
+  data_partners <- reactive(switch(input$classification_choice, 
                           'Disabled' = data_agg, 
                           'Yearbook/SOFIA Selection' = data_yearbook, 
                           'ISSCAAP Division' = data_division, 
@@ -151,6 +156,8 @@ server <- function(input, output, session) {
                      filter(year == input$year) %>%
                      filter(reporting_country == input$country) %>%
                      filter(trade_flow == input$flow) %>%
+                     filter(unit == input$unit) %>%
+                     filter(partner_country != "Other NEI") %>% # doesn't make sense to map the location of the "Other NEI" country
                      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
                        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
                        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
@@ -171,6 +178,7 @@ server <- function(input, output, session) {
                                filter(year == input$year) %>%
                                filter(reporting_country == input$country) %>%
                                filter(trade_flow == input$flow) %>%
+                               filter(unit == input$unit) %>%
                                rename(z = value) %>%
                                group_by(reporting_country, reporting_iso2, unit, year, trade_flow) %>%
                                summarise(z = sum(z)) %>%
@@ -187,6 +195,7 @@ server <- function(input, output, session) {
                            filter(year == input$year) %>%
                            filter(reporting_country == input$country) %>%
                            filter(trade_flow == input$flow) %>%
+                           filter(unit == input$unit) %>%
                            {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
                              else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
                              else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
@@ -205,6 +214,7 @@ server <- function(input, output, session) {
                        filter(year == input$year) %>%
                        filter(reporting_country == input$country) %>%
                        filter(trade_flow == input$flow) %>%
+                       filter(unit == input$unit) %>%
                        {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
                          else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
                          else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
@@ -226,16 +236,16 @@ server <- function(input, output, session) {
   )
   
   subtitle <- reactive(
-    paste0('Total ', tolower(input$flow), ": ", "USD ", data_total(), ", number of partners: ", data_n())
+    paste0('Total ', tolower(input$flow), " (", input$unit, "): ", data_total(), ", number of partners: ", data_n())
   )
   
   source = paste0("Source: FAO ", format(Sys.Date(), "%Y"), ". Global Aquatic Trade Statistics. In: Fisheries and Aquaculture. Rome. [Cited ", format(Sys.time(), "%A, %B %d %Y"), "]. https://www.fao.org/fishery/en/collection/global_commodity_prod")
 
   countrymap <- renderHighchart({
     
-    if (input$country == "Please select..." || input$flow == "Please select...") {
-      return(NULL)
-    } else
+    validate(need(input$country != "Please select..." & input$flow != "Please select...", "
+           
+        ← To start, please select a country and a trade flow on the side panel."))
     
     highchart(type = "map") %>%
       hc_add_series(mapData = map, showInLegend = F) %>%
@@ -246,11 +256,11 @@ server <- function(input, output, session) {
                     minSize = "20",
                     maxSize = "20",
                     tooltip = list(pointFormat = "Country or area: {point.reporting_country}<br>Year: {point.year}")) %>%
-      hc_add_series(data = data(), 
+      hc_add_series(data = data_partners(), 
                     type = "mapbubble", 
                     name = if_else(input$flow == "Exports", "Destinations of exports", "Origin of imports"), 
                     color = "#377eb8",
-                    tooltip = list(pointFormat = paste('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (USD): {point.z_formatted}<br>Share: {point.share}'))) %>%
+                    tooltip = list(pointFormat = paste0('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (',  input$unit,'): {point.z_formatted}<br>Share: {point.share}'))) %>%
       hc_title(text = title()) %>%
       hc_subtitle(text = subtitle()) %>%
       hc_mapNavigation(enabled = T) %>%
@@ -288,6 +298,7 @@ server <- function(input, output, session) {
       filter(year == input$year) %>%
       filter(reporting_country == input$country) %>%
       filter(trade_flow == input$flow) %>%
+      filter(unit == input$unit) %>%
       {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
         else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
         else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
@@ -308,15 +319,15 @@ server <- function(input, output, session) {
     
   chart <- renderHighchart({
     
-    if (input$country == "Please select..." || input$flow == "Please select...") {
-      return(NULL)
-    } else
+    validate(need(input$country != "Please select..." & input$flow != "Please select...", "
+           
+        ← To start, please select a country and a trade flow on the side panel."))
     
     hchart(data_chart(), 
            type = "column", 
            hcaes(x = partner_country, y = share), 
            name = paste("Share of", tolower(input$flow)),
-           tooltip = list(pointFormat = "Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (USD): {point.value_formatted}<br>Share: {point.share_pretty}")
+           tooltip = list(pointFormat = paste0("Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (",  input$unit, "): {point.value_formatted}<br>Share: {point.share_pretty}"))
     ) %>%
       hc_xAxis(title = list(text = NULL)) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow))),
@@ -354,6 +365,7 @@ server <- function(input, output, session) {
       filter(year == input$year) %>%
       filter(reporting_country == input$country) %>%
       filter(trade_flow == input$flow) %>%
+      filter(unit == input$unit) %>%
       {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
         else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
         else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
@@ -369,9 +381,9 @@ server <- function(input, output, session) {
   
   interactive_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is downloaded when using the buttons
     
-    if (input$country == "Please select..." || input$flow == "Please select...") {
-      return(NULL)
-    } else
+    validate(need(input$country != "Please select..." & input$flow != "Please select...", "
+           
+        ← To start, please select a country and a trade flow on the side panel."))
     
     datatable(data_table(),
               extensions = 'Buttons',

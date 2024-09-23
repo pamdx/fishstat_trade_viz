@@ -7,15 +7,18 @@ library(highcharter)
 # Get trade data by partner
 
 temp <- tempfile()
-download.file("https://www.fao.org/fishery/static/Data/FI_Trade_Partners_2023.1.0.zip", temp)
-data <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/TRADE_PARTNERS_VALUE.csv"))
-countries <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/CL_FI_COUNTRY_GROUPS.csv"), na = "") %>% # adding na = "" so that Namibia's ISO2 code isn't interpreted as a missing value
+download.file("https://www.fao.org/fishery/static/Data/FI_Trade_Partners_2024.1.0.zip", temp)
+data_value <- read_csv(unz(temp, "TRADE_PARTNERS_VALUE.csv"))
+data_quantity <- read_csv(unz(temp, "TRADE_PARTNERS_QUANTITY.csv"))
+countries <- read_csv(unz(temp, "CL_FI_COUNTRY_GROUPS.csv"), na = "") %>% # adding na = "" so that Namibia's ISO2 code isn't interpreted as a missing value
   select(UN_Code, ISO2_Code, Name_En, Continent_Group_En, GeoRegion_Group_En)
-commodities <- read_csv(unz(temp, "FI_Trade_Partners_2023.1.0/CL_FI_COMMODITY_ISSCFC.csv")) %>%
+commodities <- read_csv(unz(temp, "CL_FI_COMMODITY_ISSCFC.csv")) %>%
   select(Code, ISSCAAP, Name_En)
 unlink(temp)
 
 # Join tables, restructure and export data
+
+data <- rbind(data_value, data_quantity)
 
 trade_partner_raw <- data %>%
   left_join(countries, by = c("COUNTRY_REPORTER.UN_CODE" = "UN_Code"), keep = FALSE) %>%
@@ -26,7 +29,9 @@ trade_partner_raw <- data %>%
   rename(commodity_code = COMMODITY.FAO_CODE, commodity_isscaap_group = ISSCAAP, commodity_name = Name_En) %>%
   rename(trade_flow	= TRADE_FLOW.ALPHA_CODE, unit = MEASURE,	year = PERIOD,	value = VALUE) %>%
   mutate(trade_flow = case_when(trade_flow == "I" ~ "Imports", trade_flow == "E" ~ "Exports", trade_flow == "R" ~ "Exports")) %>%
-  mutate(unit = "USD", value = value * 1000, year = as.integer(year)) %>%
+  mutate(unit = case_when(unit == "V_USD_1000" ~ "USD", unit == "Q_tpw" ~ "Tonnes - product weight"),
+         value = case_when(unit == "USD" ~ value * 1000, unit == "Tonnes - product weight" ~ value),
+         year = as.integer(year)) %>%
   select(reporting_country,	reporting_iso2,	reporting_continent,	reporting_region,	partner_country,	partner_iso2,	partner_continent,	partner_region, commodity_code,	commodity_isscaap_group, commodity_name,	trade_flow,	unit,	year,	value) %>%
   group_by_at(vars(-value)) %>%
   summarise(value = sum(value)) %>%
@@ -57,13 +62,13 @@ trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Sint Maarte
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Sint Maarten"] <- "SX" # Fix lack of ISO2 for Sint Maarten (unofficial)
 trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Saint-Martin (French)"] <- "SF" # Fix lack of ISO2 for Saint-Martin (French) (unofficial)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Saint-Martin (French)"] <- "SF" # Fix lack of ISO2 for Saint-Martin (French) (unofficial)
-trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Saint Barthélemy"] <- "SF" # Fix lack of ISO2 for Saint Barthélemy (unofficial)
+trade_partner_raw$partner_iso2[trade_partner_raw$partner_country == "Saint Barthélemy"] <- "SW" # Fix lack of ISO2 for Saint Barthélemy (unofficial)
 trade_partner_raw$reporting_iso2[trade_partner_raw$reporting_country == "Saint Barthélemy"] <- "SW" # Fix lack of ISO2 for Saint Barthélemy (unofficial)
 
 cou_coordinates <- read_csv("https://raw.githubusercontent.com/google/dspl/master/samples/google/canonical/countries.csv", na = "") %>%
   rename(ISO2 = country) %>%
   select(ISO2, latitude, longitude) %>%
-  add_row(ISO2 = "XX", latitude = -50, longitude = 0) %>% # Add Other nei's coordinates
+  add_row(ISO2 = "XX", latitude = -90, longitude = 0) %>% # Add Other nei's coordinates
   add_row(ISO2 = "SU", latitude = 61.524010, longitude = 105.318756) %>% # Add USSR using Russia's coordinates
   add_row(ISO2 = "BQ", latitude = 12.201890, longitude = -68.262383) %>% # Add Bonaire's coordinates
   add_row(ISO2 = "CW", latitude = 12.169570, longitude = -68.990021) %>% # Add Curaçao's coordinates
@@ -75,7 +80,6 @@ cou_coordinates <- read_csv("https://raw.githubusercontent.com/google/dspl/maste
   add_row(ISO2 = "SX", latitude = 18.0237, longitude = -63.0458) %>% # Add Sint Maarten using its capital's coordinates
   add_row(ISO2 = "SF", latitude = 18.0731, longitude = -63.0822) %>% # Add Saint-Martin (French) using its capital's coordinates
   add_row(ISO2 = "SW", latitude = 17.897908, longitude = -62.850556) # Add Saint Barthélemy using its capital's coordinates
-
 saveRDS(cou_coordinates, "cou_coordinates.RDS")
 
 trade_partner_raw <- trade_partner_raw %>%
@@ -92,7 +96,7 @@ isscaap_classif <- read_csv("https://raw.githubusercontent.com/openfigis/RefData
   mutate(conc_isscaap_group = paste(commodity_isscaap_group, "-", name_isscaap_group)) %>%
   mutate(commodity_isscaap_division = as.numeric(substr(commodity_isscaap_group, 1, 1))) %>%
   left_join(read_csv("https://raw.githubusercontent.com/openfigis/RefData/gh-pages/species/CL_FI_SPECIES_ISSCAAP_DIVISION.csv"), by = c("commodity_isscaap_division" = "ISSCAAP_Code")) %>%
-  select(-c(Identifier, Name_Es, Name_Fr)) %>%
+  select(-c(Identifier, Name_Es, Name_Fr, Name_Ar, Name_Cn, Name_Ru)) %>%
   rename(name_isscaap_division = Name_En) %>%
   mutate(conc_isscaap_division = paste(commodity_isscaap_division, "-", name_isscaap_division)) %>%
   mutate(name_yearbook_selection = case_when(
