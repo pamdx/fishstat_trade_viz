@@ -29,8 +29,8 @@ trade_partner_raw <- data %>%
   rename(commodity_code = COMMODITY.FAO_CODE, commodity_isscaap_group = ISSCAAP, commodity_name = Name_En) %>%
   rename(trade_flow	= TRADE_FLOW.ALPHA_CODE, unit = MEASURE,	year = PERIOD,	value = VALUE) %>%
   mutate(trade_flow = case_when(trade_flow == "I" ~ "Imports", trade_flow == "E" ~ "Exports", trade_flow == "R" ~ "Exports")) %>%
-  mutate(unit = case_when(unit == "V_USD_1000" ~ "USD", unit == "Q_tpw" ~ "Tonnes - product weight"),
-         value = case_when(unit == "USD" ~ value * 1000, unit == "Tonnes - product weight" ~ value),
+  mutate(unit = case_when(unit == "V_USD_1000" ~ "USD", unit == "Q_tpw" ~ "Tonnes - net product weight"),
+         value = case_when(unit == "USD" ~ value * 1000, unit == "Tonnes - net product weight" ~ value),
          year = as.integer(year)) %>%
   select(reporting_country,	reporting_iso2,	reporting_continent,	reporting_region,	partner_country,	partner_iso2,	partner_continent,	partner_region, commodity_code,	commodity_isscaap_group, commodity_name,	trade_flow,	unit,	year,	value) %>%
   group_by_at(vars(-value)) %>%

@@ -162,6 +162,7 @@ server <- function(input, output, session) {
                        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
                        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
                        else .} %>%
+                     # filter(value > 0) %>% # better not to show bubbles when trade = 0
                      rename(z = value) %>%
                      group_by() %>%
                      mutate(total = sum(z)) %>%
@@ -249,6 +250,11 @@ server <- function(input, output, session) {
     
     highchart(type = "map") %>%
       hc_add_series(mapData = map, showInLegend = F) %>%
+      hc_add_series(data = data_partners(), 
+                    type = "mapbubble",
+                    name = if_else(input$flow == "Exports", "Destinations of exports", "Origin of imports"), 
+                    color = "#377eb8",
+                    tooltip = list(pointFormat = paste0('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (',  input$unit,'): {point.z_formatted}<br>Share: {point.share}'))) %>%
       hc_add_series(data = data_reporting(), 
                     type = "mapbubble", 
                     name = if_else(input$flow == "Exports", "Origin of exports", "Destination of imports"), 
@@ -256,18 +262,15 @@ server <- function(input, output, session) {
                     minSize = "20",
                     maxSize = "20",
                     tooltip = list(pointFormat = "Country or area: {point.reporting_country}<br>Year: {point.year}")) %>%
-      hc_add_series(data = data_partners(), 
-                    type = "mapbubble", 
-                    name = if_else(input$flow == "Exports", "Destinations of exports", "Origin of imports"), 
-                    color = "#377eb8",
-                    tooltip = list(pointFormat = paste0('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (',  input$unit,'): {point.z_formatted}<br>Share: {point.share}'))) %>%
       hc_title(text = title()) %>%
       hc_subtitle(text = subtitle()) %>%
       hc_mapNavigation(enabled = T) %>%
       hc_legend(enabled = TRUE, 
+                # bubbleLegend = list(enabled = TRUE),
                 layout = "horizontal", 
                 align = "right",
-                verticalAlign = "bottom") %>%
+                verticalAlign = "bottom"
+                ) %>%
       hc_caption(text = paste("Note: 'Other nei' refers to unspecified partners.<br>", source)) %>%
       hc_exporting(enabled = TRUE, 
                    buttons = list(
@@ -276,9 +279,8 @@ server <- function(input, output, session) {
                      )
                    ),
                    chartOptions = list(
-                     chart = list(
-                       backgroundColor = "#FFFFFF"
-                     )
+                     chart = list(backgroundColor = "#FFFFFF"),
+                     legend = list(bubbleLegend = list(enabled = TRUE))
                    ),
                    sourceWidth = 1920,
                    sourceHeight = 1080,
@@ -412,7 +414,7 @@ server <- function(input, output, session) {
               caption = title(),
               colnames = c("Partner country or area", "Year", "Flow type", "Value", "Unit", "Share (%)")) %>%
       formatRound(c("share"), 1) %>%
-      formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 0)
+      formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 2)
   })
   
   output$data_table <- interactive_table
