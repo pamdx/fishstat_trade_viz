@@ -191,10 +191,9 @@ server <- function(input, output, session) {
                                filter(trade_flow == input$flow) %>%
                                filter(unit == input$unit) %>%
                                rename(z = value) %>%
-                               group_by(reporting_country, reporting_iso2, unit, year, trade_flow) %>%
+                               group_by(reporting_country, reporting_un_code, unit, year, trade_flow) %>%
                                summarise(z = sum(z)) %>%
-                               inner_join(y = cou_coordinates, by = c("reporting_iso2" = "ISO2")) %>%
-                               rename(lat = latitude, lon = longitude) %>%
+                               inner_join(y = cou_coordinates, by = c("reporting_un_code" = "un_code")) %>%
                                mutate(z = replace(z, is.numeric(z), 1))
                              )
   
