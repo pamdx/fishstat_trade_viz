@@ -11,9 +11,6 @@ library(shinycssloaders)
 source("helpers.R")
 
 ui <- function(request){
-        fluidPage(
-          conditionalPanel(
-            condition = "output.show != 'map' && output.show != 'chart' && output.show != 'table'", style = "display: none;",
             navbarPage(title = a(href = "https://www.fao.org/fishery/en/collection/global_commodity_prod?lang=en", target = "_blank", style="text-decoration:none;color:inherit", div(img(src = "fao-logo-three-lines.svg", id = "logo", height = "35px", style = "border-right: 1px solid grey; padding: 0 0.5rem; position: relative; margin:-15px 0px; display:right-align; "), "FishStat Global Aquatic Trade")),
                        tabPanel("Data Explorer",
                                 sidebarLayout(
@@ -100,39 +97,15 @@ ui <- function(request){
                                     p(""),
                                     p("This work is made available under the Creative Commons Attribution-4.0 International licence (CC BY 4.0 ", a(href = "https://creativecommons.org/licenses/by/4.0/legalcode.en", "https://creativecommons.org/licenses/by/4.0/legalcode.en", target="_blank", .noWS = c('after')), "). By using this database, you agree to be bound by the terms of this license and the ", a(href = "https://www.fao.org/contact-us/terms/db-terms-of-use/en", "FAO Statistical Database Terms of Use", target="_blank", .noWS = c('after')), ".")
                                   )
+                                ),
+                                tags$head(
+                                  tags$link(rel = "stylesheet", type = "text/css", href = "stylesheet.css")
                                 )
                        )
             )
-            
-          ),
-          conditionalPanel(condition = "output.show == 'map'", 
-                           highchartOutput("countrymap_solo", height = "700px") %>% withSpinner()
-          ),
-          conditionalPanel(condition = "output.show == 'chart'", 
-                           highchartOutput("chart_solo", height = "700px") %>% withSpinner()
-          ),
-          conditionalPanel(condition = "output.show == 'table'", 
-                           DT::dataTableOutput("data_table_solo", height = "700px") %>% withSpinner()
-          ),
-          tags$head(
-            tags$link(rel = "stylesheet", type = "text/css", href = "stylesheet.css")
-          )
-        )
 }
 
 server <- function(input, output, session) {
-  
-  # Parse query string to identify which elements should be shown (either everything or just one of the interactive visuals)
-  
-  observe({
-    query <- parseQueryString(session$clientData$url_search)
-    if (!is.null(query[['show']])) {
-      output$show <- renderText({
-        query[['show']]
-      })
-      outputOptions(output, "show", suspendWhenHidden = FALSE)
-    }
-  })
   
   # Initialize conditional species filters
   
