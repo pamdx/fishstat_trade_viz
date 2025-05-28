@@ -1,50 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your App</title>
-    <style>
-        /* Footer styles */
-        footer {
-            display: flex;
-            justify-content: space-between; /* Distribute items evenly along the horizontal axis */
-            align-items: center; /* Center items vertically */
-            padding: 10px 20px; /* Add padding for spacing */
-        }
+<style>
+  /* Footer styles */
+  footer {
+    display: flex;
+    justify-content: space-between; /* Distribute items evenly along the horizontal axis */
+    align-items: center; /* Center items vertically */
+    padding: 10px 20px; /* Add padding for spacing */
+  }
 
-        /* Add vertical bar after each list item except the last one */
-        ul.footer-list {
-            list-style: none;
-            margin: 0; /* Remove margin to prevent extra space */
-            padding: 0;
-        }
+  /* Add vertical bar after each list item except the last one */
+  ul.footer-list {
+    list-style: none;
+    margin: 0; /* Remove margin to prevent extra space */
+    padding: 0;
+  }
 
-        ul.footer-list li {
-            display: inline;
-        }
+  ul.footer-list li {
+    display: inline;
+  }
 
-        ul.footer-list li:not(:last-child)::after {
-            content: " | ";
-        }
+  ul.footer-list li:not(:last-child)::after {
+    content: " | ";
+  }
 
-        /* Copyright link styles */
-        .copyright-link {
-            color: grey;
-        }
-    </style>
-</head>
-<body>
-    <footer>
-        <ul class="footer-list">
-            <li><a href="mailto:Fish-Statistics-Inquiries@fao.org">Contact us</a></li>
-            <li><a href="https://www.fao.org/contact-us/terms/en/" target="_blank">Terms and Conditions</a></li>
-            <li><a href="https://www.fao.org/contact-us/data-protection-and-privacy/en/" target="_blank">Data Protection and Privacy</a></li>
-            <li><a href="https://www.fao.org/contact-us/scam-alert/en/" target="_blank">Scam Alert</a></li>
-            <li><a href="https://www.fao.org/aud/69204/en/" target="_blank">Report Misconduct</a></li>
-            <li><a href="https://www.fao.org/transparency/en" target="_blank">Transparency and accountability</a></li>
-        </ul>
-        <a href="https://www.fao.org/home/en" class="copyright-link" target="_blank">© FAO&nbsp;2025</a>
-    </footer>
-</body>
-</html>
+  /* Copyright link styles */
+  .copyright-link {
+    color: grey;
+  }
+</style>
+
+<footer>
+  <ul class="footer-list">
+    <li><a href="mailto:Fish-Statistics-Inquiries@fao.org">Contact us</a></li>
+    <li><a href="https://www.fao.org/contact-us/terms/en/" target="_blank">Terms and Conditions</a></li>
+    <li><a href="https://www.fao.org/contact-us/data-protection-and-privacy/en/" target="_blank">Data Protection and Privacy</a></li>
+    <li><a href="https://www.fao.org/contact-us/scam-alert/en/" target="_blank">Scam Alert</a></li>
+    <li><a href="https://www.fao.org/aud/69204/en/" target="_blank">Report Misconduct</a></li>
+    <li><a href="https://www.fao.org/transparency/en" target="_blank">Transparency and accountability</a></li>
+  </ul>
+  <a href="https://www.fao.org/home/en" class="copyright-link" target="_blank">&copy; FAO&nbsp;2025</a>
+</footer>

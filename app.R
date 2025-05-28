@@ -115,7 +115,6 @@ ui <- function(request){
                            DT::dataTableOutput("data_table_solo", height = "700px") %>% withSpinner()
           ),
           tags$head(
-            tags$style(HTML('* {font-family: Open Sans, sans-serif !important;')),
             tags$link(rel = "stylesheet", type = "text/css", href = "stylesheet.css")
           )
         )
