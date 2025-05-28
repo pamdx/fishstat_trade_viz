@@ -128,29 +128,35 @@ server <- function(input, output, session) {
                 multiple = FALSE)
   })
   
+  # Save filtered data as a reactive variable to avoid a lot of code duplication
+  
+  filtered_data <- reactive({
+    switch(input$classification_choice,
+           'Disabled' = data_agg,
+           'Yearbook/SOFIA Selection' = data_yearbook,
+           'ISSCAAP Division' = data_division,
+           'ISSCAAP Group' = data_group) %>%
+      filter(year == input$year,
+             reporting_country == input$country,
+             trade_flow == input$flow,
+             unit == input$unit) %>%
+      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection)
+        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division)
+        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group)
+        else .}
+  })
+  
   # Country overview
   
-  data_partners <- reactive(switch(input$classification_choice, 
-                          'Disabled' = data_agg, 
-                          'Yearbook/SOFIA Selection' = data_yearbook, 
-                          'ISSCAAP Division' = data_division, 
-                          'ISSCAAP Group' = data_group) %>% 
-                     filter(year == input$year) %>%
-                     filter(reporting_country == input$country) %>%
-                     filter(trade_flow == input$flow) %>%
-                     filter(unit == input$unit) %>%
-                     filter(partner_country != "Other NEI") %>% # doesn't make sense to map the location of the "Other NEI" country
-                     {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
-                       else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
-                       else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
-                       else .} %>%
-                     # filter(value > 0) %>% # better not to show bubbles when trade = 0
-                     rename(z = value) %>%
-                     group_by() %>%
-                     mutate(total = sum(z)) %>%
-                     ungroup() %>%
-                     mutate(z_formatted = addUnits(z)) %>%
-                     mutate(share = sprintf("%0.1f%%", z/total*100))
+  data_partners <- reactive(
+                  filtered_data() %>%
+                   # filter(value > 0) %>% # better not to show bubbles when trade = 0
+                   rename(z = value) %>%
+                   group_by() %>%
+                   mutate(total = sum(z)) %>%
+                   ungroup() %>%
+                   mutate(z_formatted = addUnits(z)) %>%
+                   mutate(share = sprintf("%0.1f%%", z/total*100))
                    )
   
   data_reporting <- reactive(switch(input$classification_choice, 
@@ -158,10 +164,10 @@ server <- function(input, output, session) {
                                     'Yearbook/SOFIA Selection' = data_yearbook, 
                                     'ISSCAAP Division' = data_division, 
                                     'ISSCAAP Group' = data_group) %>% 
-                               filter(year == input$year) %>%
-                               filter(reporting_country == input$country) %>%
-                               filter(trade_flow == input$flow) %>%
-                               filter(unit == input$unit) %>%
+                               filter(year == input$year,
+                                      reporting_country == input$country,
+                                      trade_flow == input$flow,
+                                      unit == input$unit) %>%
                                rename(z = value) %>%
                                group_by(reporting_country, reporting_un_code, unit, year, trade_flow) %>%
                                summarise(z = sum(z)) %>%
@@ -169,38 +175,16 @@ server <- function(input, output, session) {
                                mutate(z = replace(z, is.numeric(z), 1))
                              )
   
-  data_total <- reactive(switch(input$classification_choice, 
-                                'Disabled' = data_agg, 
-                                'Yearbook/SOFIA Selection' = data_yearbook, 
-                                'ISSCAAP Division' = data_division, 
-                                'ISSCAAP Group' = data_group) %>% 
-                           filter(year == input$year) %>%
-                           filter(reporting_country == input$country) %>%
-                           filter(trade_flow == input$flow) %>%
-                           filter(unit == input$unit) %>%
-                           {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
-                             else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
-                             else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
-                             else .} %>%
+  data_total <- reactive(
+                          filtered_data() %>%
                            group_by(reporting_country) %>%
                            summarise(value = sum(value)) %>%
                            pull() %>%
                            addUnits()
                          )
   
-  data_n <- reactive(switch(input$classification_choice, 
-                            'Disabled' = data_agg, 
-                            'Yearbook/SOFIA Selection' = data_yearbook, 
-                            'ISSCAAP Division' = data_division, 
-                            'ISSCAAP Group' = data_group) %>% 
-                       filter(year == input$year) %>%
-                       filter(reporting_country == input$country) %>%
-                       filter(trade_flow == input$flow) %>%
-                       filter(unit == input$unit) %>%
-                       {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
-                         else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
-                         else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
-                         else .} %>%
+  data_n <- reactive(
+                      filtered_data() %>%
                        summarise(n = n()) %>%
                        pull()
   )
@@ -223,7 +207,7 @@ server <- function(input, output, session) {
   
   source = paste0("Source: FAO ", format(Sys.Date(), "%Y"), ". Global Aquatic Trade Statistics. In: Fisheries and Aquaculture. Rome. [Cited ", format(Sys.time(), "%A, %B %d %Y"), "]. https://www.fao.org/fishery/en/collection/global_commodity_prod")
 
-  countrymap <- renderHighchart({
+  output$countrymap <- renderHighchart({
     
     validate(need(input$country != "Please select..." & input$flow != "Please select...", "
            
@@ -269,23 +253,8 @@ server <- function(input, output, session) {
                    )
   })
   
-  output$countrymap <- countrymap
-  output$countrymap_solo <- countrymap # can't refer to the same output twice in the UI
-  
   data_chart <- reactive(
-    switch(input$classification_choice, 
-           'Disabled' = data_agg, 
-           'Yearbook/SOFIA Selection' = data_yearbook, 
-           'ISSCAAP Division' = data_division, 
-           'ISSCAAP Group' = data_group) %>%
-      filter(year == input$year) %>%
-      filter(reporting_country == input$country) %>%
-      filter(trade_flow == input$flow) %>%
-      filter(unit == input$unit) %>%
-      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
-        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
-        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
-        else .} %>%
+    filtered_data() %>%
       arrange(desc(value)) %>%
       group_by() %>%
       mutate(total = sum(value)) %>%
@@ -300,7 +269,7 @@ server <- function(input, output, session) {
       mutate(value_formatted = addUnits(value), share_pretty = sprintf("%0.1f%%", share))
   )
     
-  chart <- renderHighchart({
+  output$chart <- renderHighchart({
     
     validate(need(input$country != "Please select..." & input$flow != "Please select...", "
            
@@ -336,23 +305,8 @@ server <- function(input, output, session) {
       )
   })
   
-  output$chart <- chart
-  output$chart_solo <- chart # can't refer to the same output twice in the UI
-  
   data_table <- reactive(
-    switch(input$classification_choice, 
-           'Disabled' = data_agg, 
-           'Yearbook/SOFIA Selection' = data_yearbook, 
-           'ISSCAAP Division' = data_division, 
-           'ISSCAAP Group' = data_group) %>% 
-      filter(year == input$year) %>%
-      filter(reporting_country == input$country) %>%
-      filter(trade_flow == input$flow) %>%
-      filter(unit == input$unit) %>%
-      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection) 
-        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division) 
-        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group) 
-        else .} %>%
+    filtered_data() %>%
       arrange(desc(value)) %>%
       group_by() %>%
       mutate(total = sum(value)) %>%
@@ -362,7 +316,7 @@ server <- function(input, output, session) {
       add_row(partner_country = source) # add citation in the last row
     )
   
-  interactive_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is downloaded when using the buttons
+  output$data_table <- DT::renderDataTable(server = FALSE, { # server = FALSE used to make sure the entire dataset is downloaded when using the buttons
     
     validate(need(input$country != "Please select..." & input$flow != "Please select...", "
            
@@ -397,9 +351,6 @@ server <- function(input, output, session) {
       formatRound(c("share"), 1) %>%
       formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 2)
   })
-  
-  output$data_table <- interactive_table
-  output$data_table_solo <- interactive_table # can't refer to the same output twice in the UI
   
 }
 
