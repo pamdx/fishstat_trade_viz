@@ -95,7 +95,8 @@ trade_partner_ISSCAAPgroup <- trade_partner_raw %>%
   summarise(value = sum(value)) %>%
   ungroup() %>%
   left_join(isscaap_classif) %>%
-  select(-c("commodity_isscaap_division", "name_isscaap_division", "conc_isscaap_division", "name_yearbook_selection"))
+  select(-c("commodity_isscaap_division", "name_isscaap_division", "conc_isscaap_division", "name_yearbook_selection")) %>%
+  rename(species_group = conc_isscaap_group)
 
 saveRDS(trade_partner_ISSCAAPgroup, "trade_partner_ISSCAAPgroup.RDS")
 
@@ -104,7 +105,8 @@ trade_partner_ISSCAAPdivision <- trade_partner_raw %>%
   select(-c("commodity_isscaap_group", "name_isscaap_group", "conc_isscaap_group", "name_yearbook_selection")) %>%
   group_by_at(vars(-c("commodity_code", "value", "commodity_name"))) %>%
   summarise(value = sum(value)) %>%
-  ungroup()
+  ungroup() %>%
+  rename(species_group = conc_isscaap_division)
 
 saveRDS(trade_partner_ISSCAAPdivision, "trade_partner_ISSCAAPdivision.RDS")
 
@@ -114,7 +116,8 @@ trade_partner_yearbookgroup <- trade_partner_raw %>%
             "commodity_isscaap_division", "name_isscaap_division", "conc_isscaap_division")) %>%
   group_by_at(vars(-c("commodity_code", "value", "commodity_name"))) %>%
   summarise(value = sum(value)) %>%
-  ungroup()
+  ungroup() %>%
+  rename(species_group = name_yearbook_selection)
 
 saveRDS(trade_partner_yearbookgroup, "trade_partner_yearbookgroup.RDS")
 
@@ -123,7 +126,8 @@ saveRDS(trade_partner_yearbookgroup, "trade_partner_yearbookgroup.RDS")
 trade_partner_agg <- trade_partner_raw %>%
   group_by_at(vars(-c("commodity_isscaap_group", "commodity_code", "commodity_name", "value"))) %>%
   summarise(value = sum(value)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(species_group = "All species")
 
 saveRDS(trade_partner_agg, "trade_partner_agg.RDS")
 

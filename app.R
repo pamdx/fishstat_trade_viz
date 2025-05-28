@@ -111,20 +111,20 @@ server <- function(input, output, session) {
   
   output$yearbook_selection <- renderUI({
     selectInput('yearbook_selection','Yearbook/SOFIA Selection', 
-                choices = data_yearbook %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(name_yearbook_selection) %>% unique() %>% sort(), 
+                choices = data_yearbook %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(species_group) %>% unique() %>% sort(), 
                 selected = 'Aquatic animals', 
                 multiple = FALSE)
   })
   
   output$isscaap_division <- renderUI({
     selectInput('isscaap_division','ISSCAAP Division', 
-                choices = data_division %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(conc_isscaap_division) %>% unique() %>% sort(), 
+                choices = data_division %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(species_group) %>% unique() %>% sort(), 
                 multiple = FALSE)
   })
   
   output$isscaap_group <- renderUI({
     selectInput('isscaap_group','ISSCAAP Group',
-                choices = data_group %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(conc_isscaap_group) %>% unique() %>% sort(), 
+                choices = data_group %>% filter(reporting_country == input$country, trade_flow == input$flow, year == input$year, unit == input$unit) %>% pull(species_group) %>% unique() %>% sort(), 
                 multiple = FALSE)
   })
   
@@ -140,9 +140,9 @@ server <- function(input, output, session) {
              reporting_country == input$country,
              trade_flow == input$flow,
              unit == input$unit) %>%
-      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., name_yearbook_selection %in% input$yearbook_selection)
-        else if (input$classification_choice == 'ISSCAAP Division') filter(., conc_isscaap_division %in% input$isscaap_division)
-        else if (input$classification_choice == 'ISSCAAP Group') filter(., conc_isscaap_group %in% input$isscaap_group)
+      {if (input$classification_choice == 'Yearbook/SOFIA Selection') filter(., species_group %in% input$yearbook_selection)
+        else if (input$classification_choice == 'ISSCAAP Division') filter(., species_group %in% input$isscaap_division)
+        else if (input$classification_choice == 'ISSCAAP Group') filter(., species_group %in% input$isscaap_group)
         else .}
   })
   
@@ -150,7 +150,7 @@ server <- function(input, output, session) {
   
   data_partners <- reactive(
                   filtered_data() %>%
-                   # filter(value > 0) %>% # better not to show bubbles when trade = 0
+                   filter(value > 0) %>% # better not to show bubbles when trade = 0
                    rename(z = value) %>%
                    group_by() %>%
                    mutate(total = sum(z)) %>%
@@ -191,11 +191,11 @@ server <- function(input, output, session) {
   
   title <- reactive(
     if (input$classification_choice == 'Yearbook/SOFIA Selection') {
-      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$name_yearbook_selection == input$yearbook_selection,]$name_yearbook_selection[[1]]), ", ", input$year)
+      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_yearbook[data_yearbook$species_group == input$yearbook_selection,]$species_group[[1]]), ", ", input$year)
     } else if (input$classification_choice == 'ISSCAAP Division') {
-      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$conc_isscaap_division == input$isscaap_division,]$name_isscaap_division[[1]]), ", ", input$year)
+      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_division[data_division$species_group == input$isscaap_division,]$name_isscaap_division[[1]]), ", ", input$year)
     } else if (input$classification_choice == 'ISSCAAP Group') {
-      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$conc_isscaap_group == input$isscaap_group,]$name_isscaap_group[[1]]), ", ", input$year)
+      paste0(input$country, ", ", tolower(input$flow),  " of ", tolower(data_group[data_group$species_group == input$isscaap_group,]$name_isscaap_group[[1]]), ", ", input$year)
     } else {
       paste0(input$country, ", ", tolower(input$flow),  " of fishery and aquaculture products, ", input$year)
     }
@@ -219,14 +219,14 @@ server <- function(input, output, session) {
                     type = "mapbubble",
                     name = if_else(input$flow == "Exports", "Destinations of exports", "Origin of imports"), 
                     color = "#377eb8",
-                    tooltip = list(pointFormat = paste0('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (',  input$unit,'): {point.z_formatted}<br>Share: {point.share}'))) %>%
+                    tooltip = list(pointFormat = paste0('Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Species group: {point.species_group}<br>Value (',  input$unit,'): {point.z_formatted}<br>Share: {point.share}'))) %>%
       hc_add_series(data = data_reporting(), 
                     type = "mapbubble", 
                     name = if_else(input$flow == "Exports", "Origin of exports", "Destination of imports"), 
                     color = "#4daf4a",
                     minSize = "20",
                     maxSize = "20",
-                    tooltip = list(pointFormat = "Country or area: {point.reporting_country}<br>Year: {point.year}")) %>%
+                    tooltip = list(pointFormat = "Country or area: {point.reporting_country}")) %>%
       hc_title(text = title()) %>%
       hc_subtitle(text = subtitle()) %>%
       hc_mapNavigation(enabled = T) %>%
@@ -262,7 +262,7 @@ server <- function(input, output, session) {
       mutate(share = value/total*100) %>%
       mutate(partner_country = ifelse(share < 1, "Others", partner_country)) %>%
       mutate(bottom = ifelse(partner_country == "Others", 1, 0)) %>%
-      group_by(partner_country, year, bottom) %>%
+      group_by(partner_country, year, species_group, bottom) %>%
       summarize(value = sum(value), share = sum(share)) %>%
       ungroup() %>%
       arrange(bottom, desc(share)) %>%
@@ -279,7 +279,7 @@ server <- function(input, output, session) {
            type = "column", 
            hcaes(x = partner_country, y = share), 
            name = paste("Share of", tolower(input$flow)),
-           tooltip = list(pointFormat = paste0("Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Value (",  input$unit, "): {point.value_formatted}<br>Share: {point.share_pretty}"))
+           tooltip = list(pointFormat = paste0("Partner country or area: {point.partner_country}<br>Year: {point.year}<br>Species group: {point.species_group}<br>Value (",  input$unit, "): {point.value_formatted}<br>Share: {point.share_pretty}"))
     ) %>%
       hc_xAxis(title = list(text = NULL)) %>%
       hc_yAxis(title = list(text = paste("Share of", tolower(input$flow))),
@@ -312,7 +312,7 @@ server <- function(input, output, session) {
       mutate(total = sum(value)) %>%
       ungroup() %>%
       mutate(share = value/total*100) %>%
-      select(partner_country, year, trade_flow, value, unit, share) %>%
+      select(partner_country, year, species_group, trade_flow, value, unit, share) %>%
       add_row(partner_country = source) # add citation in the last row
     )
   
@@ -347,7 +347,7 @@ server <- function(input, output, session) {
               ),
               class = "display",
               caption = title(),
-              colnames = c("Partner country or area", "Year", "Flow type", "Value", "Unit", "Share (%)")) %>%
+              colnames = c("Partner country or area", "Year", "Species group", "Flow type", "Value", "Unit", "Share (%)")) %>%
       formatRound(c("share"), 1) %>%
       formatCurrency("value", currency = "", interval = 3, mark = " ", digits = 2)
   })
